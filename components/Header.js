@@ -1,3 +1,6 @@
+// TODO: This is an example header from https://next-auth.js.org/getting-started/example#frontend---add-react-hook
+// TODO: Remove this and use tailwindui components instead!
+
 import { useSession, signIn, signOut } from "next-auth/react"
 
 export default function Header() {
