@@ -28,9 +28,9 @@ export default function Home() {
           <div className="flex flex-wrap items-center justify-around max-w-4xl mt-6 sm:w-full">
             <Link href="/signin">
               <a className="p-6 mt-6 text-left border w-96 rounded-xl hover:text-blue-600 focus:text-blue-600" >
-                <h3 className="text-2xl font-bold">Sign in here!</h3>
+                <h3 className="text-2xl font-bold">Signed in status:</h3>
                 <p className="mt-4 text-xl">
-                  {session ? "User is now logged in as: " + session.user.email + ". Sign out at http://localhost:3000/api/auth/signout" : ""}
+                  {session ? "User is now logged in as: " + session.user.email : "Not signed in!"}
                 </p>
               </a>
             </Link>
