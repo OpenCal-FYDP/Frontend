@@ -1,5 +1,22 @@
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
+
+## Setup on local for development
+Make sure you have node installed.
+`node install` in the root directory of this project.
+
+### Authenticating with OAuth
+You need to create a `.env.local` file in your root of this project.
+
+Inside if you want to use my development Github OAuth `OpenCAL-dev-wrwalker`
+You should insert the following:
+```
+GITHUB_ID=bf46f2d5367b3ef7e1de
+GITHUB_SECRET=56f1...
+NEXTAUTH_URL=http://localhost:3000
+```
+Secret can be provided upon request.
+
 ## Getting Started
 
 First, run the development server:
