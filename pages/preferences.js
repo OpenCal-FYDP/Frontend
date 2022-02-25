@@ -6,6 +6,8 @@ import { SearchIcon } from '@heroicons/react/solid'
 import { useSession } from 'next-auth/react'
 import Layout from '../components/layout'
 import AccessDenied from '../components/access-denied'
+import Select from 'react-select'
+import { data } from 'autoprefixer'
 
 const tabs = [
     { name: 'General', href: '#', current: true },
@@ -16,6 +18,79 @@ const tabs = [
     { name: 'Team Members', href: '#', current: false },
 ]
 
+//Basically we'd call the api that gives us the availability timestrings and use it to populate the start and end times for a person's working hours
+const availabilityDefaults = {
+    monday: {start: "", end: ""},
+    tuesday: {start: "", end: ""},
+    wednesday: {start: "", end: ""},
+    thursday: {start: "", end: ""},
+    friday: {start: "", end: ""},
+    saturday: {start: "", end: ""},
+    sunday: {start: "", end: ""}
+}
+
+const selectTimes = [
+    {value: "00:00:00", label: "00:00:00"},
+    {value: "00:30:00", label: "00:30:00"},
+    {value: "01:00:00", label: "01:00:00"},
+    {value: "01:30:00", label: "01:30:00"},
+    {value: "02:00:00", label: "02:00:00"},
+    {value: "02:30:00", label: "02:30:00"},
+    {value: "03:00:00", label: "03:00:00"},
+    {value: "03:30:00", label: "03:30:00"},
+    {value: "04:00:00", label: "04:00:00"},
+    {value: "04:30:00", label: "04:30:00"},
+    {value: "05:00:00", label: "05:00:00"},
+    {value: "05:30:00", label: "05:30:00"},
+    {value: "06:00:00", label: "06:00:00"},
+    {value: "06:30:00", label: "06:30:00"},
+    {value: "07:00:00", label: "07:00:00"},
+    {value: "07:30:00", label: "07:30:00"},
+    {value: "08:00:00", label: "08:00:00"},
+    {value: "08:30:00", label: "08:30:00"},
+    {value: "09:00:00", label: "09:00:00"},
+    {value: "09:30:00", label: "09:30:00"},
+    {value: "10:00:00", label: "10:00:00"},
+    {value: "10:30:00", label: "10:30:00"},
+    {value: "11:00:00", label: "11:00:00"},
+    {value: "11:30:00", label: "11:30:00"},
+    {value: "12:00:00", label: "12:00:00"},
+    {value: "12:30:00", label: "12:30:00"},
+    {value: "13:00:00", label: "13:00:00"},
+    {value: "13:30:00", label: "13:30:00"},
+    {value: "14:00:00", label: "14:00:00"},
+    {value: "14:30:00", label: "14:30:00"},
+    {value: "15:00:00", label: "15:00:00"},
+    {value: "15:30:00", label: "15:30:00"},
+    {value: "16:00:00", label: "16:00:00"},
+    {value: "16:30:00", label: "16:30:00"},
+    {value: "17:00:00", label: "17:00:00"},
+    {value: "17:30:00", label: "17:30:00"},
+    {value: "18:00:00", label: "18:00:00"},
+    {value: "18:30:00", label: "18:30:00"},
+    {value: "19:00:00", label: "19:00:00"},
+    {value: "19:30:00", label: "19:30:00"},
+    {value: "20:00:00", label: "20:00:00"},
+    {value: "20:30:00", label: "20:30:00"},
+    {value: "21:00:00", label: "21:00:00"},
+    {value: "21:30:00", label: "21:30:00"},
+    {value: "22:00:00", label: "22:00:00"},
+    {value: "22:30:00", label: "22:30:00"},
+    {value: "23:00:00", label: "23:00:00"},
+    {value: "23:30:00", label: "23:30:00"}
+
+]
+
+const notificationSettings = [
+    {value: "None", label: "None"},
+    {value: "At time of event", label: "At time of event"},
+    {value: "5 minutes before", label: "5 minutes before"},
+    {value: "10 minutes before", label: "10 minutes before"},
+    {value: "15 minutes before", label: "15 minutes before"},
+    {value: "30 minutes before", label: "30 minutes before"},
+    {value: "1 hour before", label: "1 hour before"}
+]
+
 function classNames(...classes) {
     return classes.filter(Boolean).join(' ')
 }
@@ -23,10 +98,20 @@ function classNames(...classes) {
 export default function Preferences() {
     const [automaticTimezoneEnabled, setAutomaticTimezoneEnabled] = useState(true)
     const [autoUpdateApplicantDataEnabled, setAutoUpdateApplicantDataEnabled] = useState(false)
-
+    const [availabilities, setAvailabilities] = useState(availabilityDefaults)
     const { data: session, status } = useSession()
+    const [teams, setTeams] = useState(["TestTeam"])
+
+    const email = session? session.user.email: "";
+    const [calendars, setCalendars] = useState([{value: email, label: email}]);
     const loading = status === 'loading'
 
+    function updateAvailability(day, startOrEndTime, value){
+        let availabilityUpdated = availabilities;
+        availabilityUpdated[day][startOrEndTime] = value;
+        setAvailabilities(availabilityUpdated);
+        console.log(availabilities);
+    }
     // When rendering client side don't display anything until loading is complete
     if (typeof window !== 'undefined' && loading) return null
 
@@ -40,7 +125,7 @@ export default function Preferences() {
                 {/* Content area */}
                 <div>
                     <div className="max-w-4xl mx-auto flex flex-col md:px-8 xl:px-0">
-                        <div className="sticky top-0 z-10 flex-shrink-0 h-16 bg-white border-b border-gray-200 flex">
+                        {/*<div className="sticky top-0 z-10 flex-shrink-0 h-16 bg-white border-b border-gray-200 flex">
                             <div className="flex-1 flex justify-between px-4 md:px-0">
                                 <div className="flex-1 flex">
                                     <form className="w-full flex md:ml-0" action="#" method="GET">
@@ -81,7 +166,7 @@ export default function Preferences() {
                                     </button>
                                 </div>
                             </div>
-                        </div>
+                        </div> */}
 
                         <main className="flex-1">
                             <div className="relative max-w-4xl mx-auto md:px-8 xl:px-0">
@@ -92,7 +177,7 @@ export default function Preferences() {
                                     <div className="px-4 sm:px-6 md:px-0">
                                         <div className="py-6">
                                             {/* Tabs */}
-                                            <div className="lg:hidden">
+                                            {/*<div className="lg:hidden">
                                                 <label htmlFor="selected-tab" className="sr-only">
                                                     Select a tab
                                                 </label>
@@ -126,87 +211,84 @@ export default function Preferences() {
                                                         ))}
                                                     </nav>
                                                 </div>
-                                            </div>
+                                            </div>*/}
 
                                             {/* Description list with inline editing */}
+                                            
                                             <div className="mt-10 divide-y divide-gray-200">
-                                                <div className="space-y-1">
-                                                    <h3 className="text-lg leading-6 font-medium text-gray-900">Profile</h3>
+                                                <div className="space-y-2">
+                                                    <h2 className="text-xl leading-6 font-bold text-gray-900">Meeting Availability</h2>
                                                     <p className="max-w-2xl text-sm text-gray-500">
-                                                        This information will be displayed publicly so be careful what you share.
+                                                        Define ranges of when you are available on a recurring basis.
                                                     </p>
                                                 </div>
                                                 <div className="mt-6">
                                                     <dl className="divide-y divide-gray-200">
                                                         <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
-                                                            <dt className="text-sm font-medium text-gray-500">Name</dt>
-                                                            <dd className="mt-1 flex text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                                                                <span className="flex-grow">Chelsea Hagon</span>
-                                                                <span className="ml-4 flex-shrink-0">
-                                                                    <button
-                                                                        type="button"
-                                                                        className="bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                                                                    >
-                                                                        Update
-                                                                    </button>
-                                                                </span>
+                                                            <dt className="text-sm font-medium text-gray-500">Monday</dt>
+                                                            <dd className="mt-1 flex flex-wrap items-center text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability("monday", "start", e.value)}/></span>
+                                                                <span className="ml-3"> - </span>
+                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability("monday", "end", e.value)}/></span>
                                                             </dd>
                                                         </div>
-                                                        <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:pt-5">
-                                                            <dt className="text-sm font-medium text-gray-500">Photo</dt>
-                                                            <dd className="mt-1 flex text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                                                                <span className="flex-grow">
-                                                                    <img
-                                                                        className="h-8 w-8 rounded-full"
-                                                                        src="https://images.unsplash.com/photo-1550525811-e5869dd03032?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80"
-                                                                        alt=""
-                                                                    />
-                                                                </span>
-                                                                <span className="ml-4 flex-shrink-0 flex items-start space-x-4">
-                                                                    <button
-                                                                        type="button"
-                                                                        className="bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                                                                    >
-                                                                        Update
-                                                                    </button>
-                                                                    <span className="text-gray-300" aria-hidden="true">
-                                                                        |
-                                                                    </span>
-                                                                    <button
-                                                                        type="button"
-                                                                        className="bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                                                                    >
-                                                                        Remove
-                                                                    </button>
-                                                                </span>
+                                                        <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+                                                            <dt className="text-sm font-medium text-gray-500">Tuesday</dt>
+                                                            <dd className="mt-1 flex flex-wrap items-center text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability("tuesday", "start", e.value)}/></span>
+                                                                <span className="ml-3"> - </span>
+                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability("tuesday", "end", e.value)}/></span>
                                                             </dd>
                                                         </div>
-                                                        <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:pt-5">
-                                                            <dt className="text-sm font-medium text-gray-500">Email</dt>
-                                                            <dd className="mt-1 flex text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                                                                <span className="flex-grow">chelsea.hagon@example.com</span>
-                                                                <span className="ml-4 flex-shrink-0">
-                                                                    <button
-                                                                        type="button"
-                                                                        className="bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                                                                    >
-                                                                        Update
-                                                                    </button>
-                                                                </span>
+                                                        <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+                                                            <dt className="text-sm font-medium text-gray-500">Wednesday</dt>
+                                                            <dd className="mt-1 flex flex-wrap items-center text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability("wednesday", "start", e.value)}/></span>
+                                                                <span className="ml-3"> - </span>
+                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability("wednesday", "end", e.value)}/></span>
                                                             </dd>
                                                         </div>
-                                                        <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:border-b sm:border-gray-200">
-                                                            <dt className="text-sm font-medium text-gray-500">Job title</dt>
-                                                            <dd className="mt-1 flex text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                                                                <span className="flex-grow">Human Resources Manager</span>
-                                                                <span className="ml-4 flex-shrink-0">
-                                                                    <button
-                                                                        type="button"
-                                                                        className="bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                                                                    >
-                                                                        Update
-                                                                    </button>
-                                                                </span>
+                                                        <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+                                                            <dt className="text-sm font-medium text-gray-500">Thursday</dt>
+                                                            <dd className="mt-1 flex flex-wrap items-center text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability("thursday", "start", e.value)}/></span>
+                                                                <span className="ml-3"> - </span>
+                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability("thursday", "end", e.value)}/></span>
+                                                            </dd>
+                                                        </div>
+                                                        <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+                                                            <dt className="text-sm font-medium text-gray-500">Friday</dt>
+                                                            <dd className="mt-1 flex flex-wrap items-center text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability("friday", "start", e.value)}/></span>
+                                                                <span className="ml-3"> - </span>
+                                                                <span className="ml-3"><Select options={selectTimes}  onChange={e => updateAvailability("friday", "end", e.value)}/></span>
+                                                            </dd>
+                                                        </div>
+                                                        <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+                                                            <dt className="text-sm font-medium text-gray-500">Saturday</dt>
+                                                            <dd className="mt-1 flex flex-wrap items-center text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability("saturday", "start", e.value)}/></span>
+                                                                <span className="ml-3"> - </span>
+                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability("saturday", "end", e.value)}/></span>
+                                                            </dd>
+                                                        </div>
+                                                        <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+                                                            <dt className="text-sm font-medium text-gray-500">Sunday</dt>
+                                                            <dd className="mt-1 flex flex-wrap items-center text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability("sunday", "start", e.value)}/></span>
+                                                                <span className="ml-3"> - </span>
+                                                                <span className="ml-3"><Select options={selectTimes}  onChange={e => updateAvailability("sunday", "end", e.value)}/></span>
+                                                            </dd>
+                                                        </div>
+                                                        <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+                                                            <dt className="text-sm font-medium text-gray-500"></dt>
+                                                            <dd className="mt-1 flex flex-wrap items-center text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                                            <button
+                                                                type="button"
+                                                                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                                            >
+                                                                Update Availability
+                                                            </button>
                                                             </dd>
                                                         </div>
                                                     </dl>
@@ -214,100 +296,89 @@ export default function Preferences() {
                                             </div>
 
                                             <div className="mt-10 divide-y divide-gray-200">
-                                                <div className="space-y-1">
-                                                    <h3 className="text-lg leading-6 font-medium text-gray-900">Account</h3>
+                                                <div className="space-y-2">
+                                                <h2 className="text-xl leading-6 font-bold text-gray-900">Notification Settings</h2>
                                                     <p className="max-w-2xl text-sm text-gray-500">
-                                                        Manage how information is displayed on your account.
+                                                        Manage when you are notified before your events.
                                                     </p>
                                                 </div>
                                                 <div className="mt-6">
                                                     <dl className="divide-y divide-gray-200">
+                                                        <span className="ml-3"><Select options={notificationSettings}/></span>
                                                         <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
-                                                            <dt className="text-sm font-medium text-gray-500">Language</dt>
-                                                            <dd className="mt-1 flex text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                                                                <span className="flex-grow">English</span>
-                                                                <span className="ml-4 flex-shrink-0">
-                                                                    <button
-                                                                        type="button"
-                                                                        className="bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                                                                    >
-                                                                        Update
-                                                                    </button>
-                                                                </span>
+                                                            <dt className="text-sm font-medium text-gray-500"></dt>
+                                                            <dd className="mt-1 flex flex-wrap items-center text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                                            <button
+                                                                type="button"
+                                                                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                                            >
+                                                                Update Notification Settings
+                                                            </button>
                                                             </dd>
                                                         </div>
-                                                        <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:pt-5">
-                                                            <dt className="text-sm font-medium text-gray-500">Date format</dt>
-                                                            <dd className="mt-1 flex text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                                                                <span className="flex-grow">DD-MM-YYYY</span>
-                                                                <span className="ml-4 flex-shrink-0 flex items-start space-x-4">
-                                                                    <button
-                                                                        type="button"
-                                                                        className="bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                                                                    >
-                                                                        Update
-                                                                    </button>
-                                                                    <span className="text-gray-300" aria-hidden="true">
-                                                                        |
-                                                                    </span>
-                                                                    <button
-                                                                        type="button"
-                                                                        className="bg-white rounded-md font-medium text-purple-600 hover:text-purple-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                                                                    >
-                                                                        Remove
-                                                                    </button>
-                                                                </span>
+                                                        
+                                                    </dl>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-10 divide-y divide-gray-200">
+                                                <div className="space-y-2">
+                                                <h2 className="text-xl leading-6 font-bold text-gray-900">Calendars</h2>
+                                                    <p className="max-w-2xl text-sm text-gray-500">
+                                                        Configure how OpenCal integrates with your calendars.
+                                                    </p>
+                                                </div>
+                                                <div className="mt-6">
+                                                    <dl className="divide-y divide-gray-200">
+                                                        <span className="ml-3"><Select options={calendars}/></span>
+                                                        <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+                                                            <dt className="text-sm font-medium text-gray-500"></dt>
+                                                            <dd className="mt-1 flex flex-wrap items-center text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                                            <button
+                                                                type="button"
+                                                                className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                                            >
+                                                                Update Calendar Settings
+                                                            </button>
                                                             </dd>
                                                         </div>
-                                                        <Switch.Group as="div" className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:pt-5">
-                                                            <Switch.Label as="dt" className="text-sm font-medium text-gray-500" passive>
-                                                                Automatic timezone
-                                                            </Switch.Label>
-                                                            <dd className="mt-1 flex text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                                                                <Switch
-                                                                    checked={automaticTimezoneEnabled}
-                                                                    onChange={setAutomaticTimezoneEnabled}
-                                                                    className={classNames(
-                                                                        automaticTimezoneEnabled ? 'bg-purple-600' : 'bg-gray-200',
-                                                                        'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:ml-auto'
-                                                                    )}
+                                                        
+                                                    </dl>
+                                                </div>
+                                            </div>
+
+                                            <div className="mt-10 divide-y divide-gray-200">
+                                                <div className="space-y-2">
+                                                <h2 className="text-xl leading-6 font-bold text-gray-900">Teams</h2>
+                                                    <p className="max-w-2xl text-sm text-gray-500">
+                                                        Manage your teams.
+                                                    </p>
+                                                </div>
+                                                <div className="mt-6">
+                                                    <dl className="divide-y divide-gray-200">
+                                                        {teams.map((team) => {
+                                                            let teamPath = "/team/" + team;
+                                                            return (
+                                                                <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+                                                                    <dt className="text-sm font-medium text-gray-500"><a href={teamPath}>{team}</a></dt>
+                                                                    <dd className="mt-1 flex flex-wrap items-center text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                                                    </dd>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                        
+                                                        <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+                                                            <dt className="text-sm font-medium text-gray-500"></dt>
+                                                            <dd className="mt-1 flex flex-wrap items-center text-sm text-gray-900 sm:mt-0 sm:col-span-2">
+                                                                <button
+                                                                    type="button"
+                                                                    className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                                                 >
-                                                                    <span
-                                                                        aria-hidden="true"
-                                                                        className={classNames(
-                                                                            automaticTimezoneEnabled ? 'translate-x-5' : 'translate-x-0',
-                                                                            'inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200'
-                                                                        )}
-                                                                    />
-                                                                </Switch>
+                                                                    Create a team
+                                                                </button>
                                                             </dd>
-                                                        </Switch.Group>
-                                                        <Switch.Group
-                                                            as="div"
-                                                            className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4 sm:border-b sm:border-gray-200"
-                                                        >
-                                                            <Switch.Label as="dt" className="text-sm font-medium text-gray-500" passive>
-                                                                Auto-update applicant data
-                                                            </Switch.Label>
-                                                            <dd className="mt-1 flex text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                                                                <Switch
-                                                                    checked={autoUpdateApplicantDataEnabled}
-                                                                    onChange={setAutoUpdateApplicantDataEnabled}
-                                                                    className={classNames(
-                                                                        autoUpdateApplicantDataEnabled ? 'bg-purple-600' : 'bg-gray-200',
-                                                                        'relative inline-flex flex-shrink-0 h-6 w-11 border-2 border-transparent rounded-full cursor-pointer transition-colors ease-in-out duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 sm:ml-auto'
-                                                                    )}
-                                                                >
-                                                                    <span
-                                                                        aria-hidden="true"
-                                                                        className={classNames(
-                                                                            autoUpdateApplicantDataEnabled ? 'translate-x-5' : 'translate-x-0',
-                                                                            'inline-block h-5 w-5 rounded-full bg-white shadow transform ring-0 transition ease-in-out duration-200'
-                                                                        )}
-                                                                    />
-                                                                </Switch>
-                                                            </dd>
-                                                        </Switch.Group>
+                                                        </div>
+                                                        
                                                     </dl>
                                                 </div>
                                             </div>
