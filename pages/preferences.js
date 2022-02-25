@@ -3,11 +3,12 @@ import { Switch } from '@headlessui/react'
 import { BellIcon } from '@heroicons/react/outline'
 import { SearchIcon } from '@heroicons/react/solid'
 /* This example requires Tailwind CSS v2.0+ */
-import { useSession } from 'next-auth/react'
+import { useSession, getSession } from 'next-auth/react'
 import Layout from '../components/layout'
 import AccessDenied from '../components/access-denied'
 import Select from 'react-select'
 import { data } from 'autoprefixer'
+import Link from 'next/link'
 
 const tabs = [
     { name: 'General', href: '#', current: true },
@@ -101,16 +102,15 @@ export default function Preferences() {
     const [availabilities, setAvailabilities] = useState(availabilityDefaults)
     const { data: session, status } = useSession()
     const [teams, setTeams] = useState(["TestTeam"])
-
     const email = session? session.user.email: "";
-    const [calendars, setCalendars] = useState([{value: email, label: email}]);
+    const [calendars, setCalendars] = useState([{value: email, label: email}])
+
     const loading = status === 'loading'
 
     function updateAvailability(day, startOrEndTime, value){
         let availabilityUpdated = availabilities;
         availabilityUpdated[day][startOrEndTime] = value;
         setAvailabilities(availabilityUpdated);
-        console.log(availabilities);
     }
     // When rendering client side don't display anything until loading is complete
     if (typeof window !== 'undefined' && loading) return null
@@ -357,10 +357,10 @@ export default function Preferences() {
                                                 <div className="mt-6">
                                                     <dl className="divide-y divide-gray-200">
                                                         {teams.map((team) => {
-                                                            let teamPath = "/team/" + team;
+                                                            let teamPath = "/team/" + team; //this should be teamID, will update once I have the GetTeam API built
                                                             return (
                                                                 <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
-                                                                    <dt className="text-sm font-medium text-gray-500"><a href={teamPath}>{team}</a></dt>
+                                                                    <dt className="text-sm font-medium text-gray-500"><Link href="team/[teamID]" as={teamPath}><a>{team}</a></Link></dt>
                                                                     <dd className="mt-1 flex flex-wrap items-center text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                                                                     </dd>
                                                                 </div>
@@ -392,4 +392,13 @@ export default function Preferences() {
             </div>
         </Layout>
     )
+}
+
+export async function getServerSideProps(context){
+    //call apis to get data for preferences
+    return {
+        props: {
+          session: await getSession(context),
+        },
+    }
 }
