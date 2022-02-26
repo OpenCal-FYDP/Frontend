@@ -40,7 +40,7 @@ export default function Example() {
                             </a>
                         </div>
 
-                        {session ? "User is now logged in as: " + session.user.email + ". Sign out at http://localhost:3000/api/auth/signout" : ""}
+                        {session ? "User is now logged in as: " + session.user.email : ""}
                     </div>
                 </div>
             </div>

@@ -4,7 +4,7 @@
 export default function UserDetails(props) {
     return (
         <>
-            <div className="mt-5 bg-white overflow-hidden shadow rounded-lg">
+            <div>
                 <div className="px-4 py-5 sm:p-6">
                     <div className="flex">
                         <div className="mr-4 flex-shrink-0">
