@@ -1,6 +1,6 @@
 /* This example requires Tailwind CSS v2.0+ */
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard' },
+  { name: 'Dashboard', href: '/bookings' }, // TODO: Make this a real dynamic route!
   { name: 'Preferences', href: '/preferences' },
 ]
 
