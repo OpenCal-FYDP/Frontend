@@ -29,7 +29,7 @@ function SignInSignOut() {
   }
 }
 
-export default function Example() {
+export default function Header() {
   return (
     <header className="bg-indigo-600">
       <nav className="mx-auto px-4 sm:px-6 lg:px-8" aria-label="Top">
