@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Flatpickr from "react-flatpickr";
+import "flatpickr/dist/themes/light.css";
 
 export default function NewEvent() {
 
@@ -13,44 +15,44 @@ export default function NewEvent() {
 
                         <div className="mt-6">
                             <div>
-                                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                    Email
+                                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                                    Name
                                 </label>
                                 <div className="mt-1">
                                     <input
-                                        type="email"
-                                        name="email"
-                                        id="email"
+                                        type="name"
+                                        name="name"
+                                        id="name"
                                         className="shadow-sm focus:ring-indigo-500 border focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
                                         placeholder="you@example.com"
                                     />
                                 </div>
                             </div>
-                            <div>
-                                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                    Email
+                            <div className="mt-4">
+                                <label htmlFor="date" className="block text-sm font-medium text-gray-700">
+                                    Date
                                 </label>
                                 <div className="mt-1">
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        id="email"
+                                    <Flatpickr
+                                        type="date"
+                                        name="date"
+                                        id="date"
                                         className="shadow-sm focus:ring-indigo-500 border focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                        placeholder="you@example.com"
+                                        data-enable-time
                                     />
                                 </div>
                             </div>
-                            <div>
-                                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                    Email
+                            <div className="mt-4">
+                                <label htmlFor="length" className="block text-sm font-medium text-gray-700">
+                                    Length (minutes)
                                 </label>
                                 <div className="mt-1">
                                     <input
-                                        type="email"
-                                        name="email"
-                                        id="email"
+                                        type="length"
+                                        name="length"
+                                        id="length"
                                         className="shadow-sm focus:ring-indigo-500 border focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                                        placeholder="you@example.com"
+                                        placeholder="30"
                                     />
                                 </div>
                             </div>
