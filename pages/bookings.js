@@ -3,7 +3,26 @@ import { useSession } from 'next-auth/react'
 import Layout from '../components/layout'
 import AccessDenied from '../components/access-denied'
 import CalendarWeekView from '../components/bookings/calendar-week-view'
-import Details from '../components/bookings/details'
+import Details from '../components/bookings/user-details'
+import NewEvent from '../components/bookings/new-event'
+import { useRouter } from 'next/router'
+
+function Sidebar(props) {
+    const router = useRouter()
+    const { newEvent } = router.query
+    // TODO: Check route here and figure out whether to put Team-details or user-details
+    if (newEvent) {
+        return (
+            <NewEvent></NewEvent>
+
+        )
+    }
+    return (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <Details user={props.user}></Details>
+        </div>
+    )
+}
 
 export default function Page() {
 
@@ -39,13 +58,8 @@ export default function Page() {
                         {/* Secondary column (hidden on smaller screens) */}
                         <aside className="hidden lg:block lg:flex-shrink-0 lg:order-first">
                             <div className="h-full relative flex flex-col w-96 border-r border-gray-200 bg-white overflow-y-auto">
-                                
-                                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                                    {/* Your content */}
-                                    <Details user={session.user}></Details>
-                                </div>
-
-                                {/* TODO: insert whatever Matt wanted here. Something team-related */}
+                                {/* Your content */}
+                                <Sidebar user={session.user}></Sidebar>
                             </div>
                         </aside>
                     </main>

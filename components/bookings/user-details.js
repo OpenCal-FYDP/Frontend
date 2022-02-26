@@ -1,10 +1,10 @@
 // This is the details on the sidebar that shows up on the bookings page. It will show user name or team name and their
 // details there.
 
-export default function Details(props) {
+export default function UserDetails(props) {
     return (
         <>
-            <div className="bg-white overflow-hidden shadow rounded-lg">
+            <div className="mt-5 bg-white overflow-hidden shadow rounded-lg">
                 <div className="px-4 py-5 sm:p-6">
                     <div className="flex">
                         <div className="mr-4 flex-shrink-0">
