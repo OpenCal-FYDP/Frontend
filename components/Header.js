@@ -1,10 +1,35 @@
+import { useSession } from "next-auth/react"
+
 /* This example requires Tailwind CSS v2.0+ */
 const navigation = [
-  { name: 'Dashboard', href: '/dashboard' },
+  { name: 'Dashboard', href: '/bookings' }, // TODO: Make this a real dynamic route!
   { name: 'Preferences', href: '/preferences' },
 ]
 
-export default function Example() {
+function SignInSignOut() {
+  const { data: session } = useSession()
+  if (session) {
+    return (
+      <a
+        href="/api/auth/signout"
+        className="inline-block bg-white py-2 px-4 border border-transparent rounded-md text-base font-medium text-indigo-600 hover:bg-indigo-50"
+      >
+        Sign out
+      </a>
+    )
+  } else {
+    return (
+      <a
+        href="/signin"
+        className="inline-block bg-white py-2 px-4 border border-transparent rounded-md text-base font-medium text-indigo-600 hover:bg-indigo-50"
+      >
+        Sign in
+      </a>
+    )
+  }
+}
+
+export default function Header() {
   return (
     <header className="bg-indigo-600">
       <nav className="mx-auto px-4 sm:px-6 lg:px-8" aria-label="Top">
@@ -27,18 +52,7 @@ export default function Example() {
             </div>
           </div>
           <div className="ml-10 space-x-4">
-            <a
-              href="/signin"
-              className="inline-block bg-indigo-500 py-2 px-4 border border-transparent rounded-md text-base font-medium text-white hover:bg-opacity-75"
-            >
-              Sign in
-            </a>
-            <a
-              href="/api/auth/signout"
-              className="inline-block bg-white py-2 px-4 border border-transparent rounded-md text-base font-medium text-indigo-600 hover:bg-indigo-50"
-            >
-              Sign out
-            </a>
+            <SignInSignOut></SignInSignOut>
           </div>
         </div>
         <div className="py-4 flex flex-wrap justify-center space-x-6 lg:hidden">

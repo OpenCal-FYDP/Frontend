@@ -2,6 +2,7 @@
 import { Fragment, useEffect, useRef } from 'react'
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, DotsHorizontalIcon } from '@heroicons/react/solid'
 import { Menu, Transition } from '@headlessui/react'
+import Link from 'next/link'
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
@@ -51,15 +52,8 @@ export default function CalendarWeekView() {
               <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
             </button>
           </div>
-          <div className="hidden md:ml-4 md:flex md:items-center">
+          <div className="hidden md:flex md:items-center">
             <Menu as="div" className="relative">
-              <Menu.Button
-                type="button"
-                className="flex items-center rounded-md border border-gray-300 bg-white py-2 pl-3 pr-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50"
-              >
-                Week view
-                <ChevronDownIcon className="ml-2 h-5 w-5 text-gray-400" aria-hidden="true" />
-              </Menu.Button>
 
               <Transition
                 as={Fragment}
@@ -129,12 +123,13 @@ export default function CalendarWeekView() {
               </Transition>
             </Menu>
             <div className="ml-6 h-6 w-px bg-gray-300" />
-            <button
-              type="button"
-              className="focus:outline-none ml-6 rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-            >
-              Add event
-            </button>
+            <Link href={{
+              query: { newEvent: true },
+            }}>
+              <a className="focus:outline-none ml-6 rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                New event
+              </a>
+            </Link>
           </div>
           <Menu as="div" className="relative ml-6 md:hidden">
             <Menu.Button className="-mx-2 flex items-center rounded-full border border-transparent p-2 text-gray-400 hover:text-gray-500">
