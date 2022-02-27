@@ -1,4 +1,3 @@
-/* This example requires Tailwind CSS v2.0+ */
 import { useSession } from 'next-auth/react'
 import Layout from '../components/layout'
 import AccessDenied from '../components/access-denied'
@@ -12,10 +11,7 @@ function Sidebar(props) {
     const { newEvent } = router.query
     // TODO: Check route here and figure out whether to put Team-details or user-details
     if (newEvent) {
-        return (
-            <NewEvent></NewEvent>
-
-        )
+        return (<NewEvent></NewEvent>)
     }
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
