@@ -10,15 +10,6 @@ import Select from 'react-select'
 import { data } from 'autoprefixer'
 import Link from 'next/link'
 
-const tabs = [
-    { name: 'General', href: '#', current: true },
-    { name: 'Password', href: '#', current: false },
-    { name: 'Notifications', href: '#', current: false },
-    { name: 'Plan', href: '#', current: false },
-    { name: 'Billing', href: '#', current: false },
-    { name: 'Team Members', href: '#', current: false },
-]
-
 //Basically we'd call the api that gives us the availability timestrings and use it to populate the start and end times for a person's working hours
 const availabilityDefaults = {
     monday: {start: "", end: ""},
@@ -83,13 +74,8 @@ const selectTimes = [
 ]
 
 const notificationSettings = [
-    {value: "None", label: "None"},
-    {value: "At time of event", label: "At time of event"},
-    {value: "5 minutes before", label: "5 minutes before"},
-    {value: "10 minutes before", label: "10 minutes before"},
-    {value: "15 minutes before", label: "15 minutes before"},
-    {value: "30 minutes before", label: "30 minutes before"},
-    {value: "1 hour before", label: "1 hour before"}
+    {value: "Off", label: "Off"},
+    {value: "Email notifications", label: "Desktop notifications"}
 ]
 
 function classNames(...classes) {
@@ -101,7 +87,7 @@ export default function Preferences() {
     const [autoUpdateApplicantDataEnabled, setAutoUpdateApplicantDataEnabled] = useState(false)
     const [availabilities, setAvailabilities] = useState(availabilityDefaults)
     const { data: session, status } = useSession()
-    const [teams, setTeams] = useState(["TestTeam"])
+    const [teams, setTeams] = useState([])
     const email = session? session.user.email: "";
     const [calendars, setCalendars] = useState([{value: email, label: email}])
 
@@ -125,49 +111,6 @@ export default function Preferences() {
                 {/* Content area */}
                 <div>
                     <div className="max-w-4xl mx-auto flex flex-col md:px-8 xl:px-0">
-                        {/*<div className="sticky top-0 z-10 flex-shrink-0 h-16 bg-white border-b border-gray-200 flex">
-                            <div className="flex-1 flex justify-between px-4 md:px-0">
-                                <div className="flex-1 flex">
-                                    <form className="w-full flex md:ml-0" action="#" method="GET">
-                                        <label htmlFor="mobile-search-field" className="sr-only">
-                                            Search
-                                        </label>
-                                        <label htmlFor="desktop-search-field" className="sr-only">
-                                            Search
-                                        </label>
-                                        <div className="relative w-full text-gray-400 focus-within:text-gray-600">
-                                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center">
-                                                <SearchIcon className="flex-shrink-0 h-5 w-5" aria-hidden="true" />
-                                            </div>
-                                            <input
-                                                name="mobile-search-field"
-                                                id="mobile-search-field"
-                                                className="h-full w-full border-transparent py-2 pl-8 pr-3 text-base text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-0 focus:border-transparent focus:placeholder-gray-400 sm:hidden"
-                                                placeholder="Search"
-                                                type="search"
-                                            />
-                                            <input
-                                                name="desktop-search-field"
-                                                id="desktop-search-field"
-                                                className="hidden h-full w-full border-transparent py-2 pl-8 pr-3 text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-0 focus:border-transparent focus:placeholder-gray-400 sm:block"
-                                                placeholder="Search jobs, applicants, and more"
-                                                type="search"
-                                            />
-                                        </div>
-                                    </form>
-                                </div>
-                                <div className="ml-4 flex items-center md:ml-6">
-                                    <button
-                                        type="button"
-                                        className="bg-white rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                                    >
-                                        <BellIcon className="h-6 w-6" aria-hidden="true" />
-                                        <span className="sr-only">View notifications</span>
-                                    </button>
-                                </div>
-                            </div>
-                        </div> */}
-
                         <main className="flex-1">
                             <div className="relative max-w-4xl mx-auto md:px-8 xl:px-0">
                                 <div className="pt-10 pb-16">
@@ -175,46 +118,7 @@ export default function Preferences() {
                                         <h1 className="text-3xl font-extrabold text-gray-900">Settings</h1>
                                     </div>
                                     <div className="px-4 sm:px-6 md:px-0">
-                                        <div className="py-6">
-                                            {/* Tabs */}
-                                            {/*<div className="lg:hidden">
-                                                <label htmlFor="selected-tab" className="sr-only">
-                                                    Select a tab
-                                                </label>
-                                                <select
-                                                    id="selected-tab"
-                                                    name="selected-tab"
-                                                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-purple-500 focus:border-purple-500 sm:text-sm rounded-md"
-                                                    defaultValue={tabs.find((tab) => tab.current).name}
-                                                >
-                                                    {tabs.map((tab) => (
-                                                        <option key={tab.name}>{tab.name}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                            <div className="hidden lg:block">
-                                                <div className="border-b border-gray-200">
-                                                    <nav className="-mb-px flex space-x-8">
-                                                        {tabs.map((tab) => (
-                                                            <a
-                                                                key={tab.name}
-                                                                href={tab.href}
-                                                                className={classNames(
-                                                                    tab.current
-                                                                        ? 'border-purple-500 text-purple-600'
-                                                                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700',
-                                                                    'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm'
-                                                                )}
-                                                            >
-                                                                {tab.name}
-                                                            </a>
-                                                        ))}
-                                                    </nav>
-                                                </div>
-                                            </div>*/}
-
-                                            {/* Description list with inline editing */}
-                                            
+                                        <div className="py-6">    
                                             <div className="mt-10 divide-y divide-gray-200">
                                                 <div className="space-y-2">
                                                     <h2 className="text-xl leading-6 font-bold text-gray-900">Meeting Availability</h2>
@@ -299,7 +203,7 @@ export default function Preferences() {
                                                 <div className="space-y-2">
                                                 <h2 className="text-xl leading-6 font-bold text-gray-900">Notification Settings</h2>
                                                     <p className="max-w-2xl text-sm text-gray-500">
-                                                        Manage when you are notified before your events.
+                                                        Manage how you are notified before your events.
                                                     </p>
                                                 </div>
                                                 <div className="mt-6">
@@ -367,17 +271,19 @@ export default function Preferences() {
                                                             );
                                                         })}
                                                         
-                                                        <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+                                                        {teams.length === 0? <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
                                                             <dt className="text-sm font-medium text-gray-500"></dt>
                                                             <dd className="mt-1 flex flex-wrap items-center text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                                                                <button
-                                                                    type="button"
-                                                                    className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                                                >
-                                                                    Create a team
-                                                                </button>
+                                                                <Link href="team/create">
+                                                                    <button
+                                                                        type="button"
+                                                                        className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                                                    >
+                                                                        Create a team
+                                                                    </button>
+                                                                </Link>
                                                             </dd>
-                                                        </div>
+                                                        </div>: <div></div>}
                                                         
                                                     </dl>
                                                 </div>
