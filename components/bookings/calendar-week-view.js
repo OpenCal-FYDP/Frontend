@@ -1,17 +1,22 @@
 /* This example requires Tailwind CSS v2.0+ */
-import { Fragment, useEffect, useRef } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, DotsHorizontalIcon } from '@heroicons/react/solid'
 import { Menu, Transition } from '@headlessui/react'
 import Link from 'next/link'
+import { DateTime, Interval } from 'luxon'
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
-export default function CalendarWeekView() {
+export default function CalendarWeekView(props) {
   const container = useRef(null)
   const containerNav = useRef(null)
   const containerOffset = useRef(null)
+  const weekDates = props.data.dates;
+  const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const events = [{event: "Group Meeting", time: "2022-03-01T20:00:00", duration: 2}, {event: "406 Lecture", time: "2022-03-01T11:30:00", duration: 3}, {event: "406 Lecture", time: "2022-03-02T11:30:00", duration: 3}]; //duration is number of half hour increments, could change but just for testing the event mappings this is fine 
 
   useEffect(() => {
     // Set the container scroll position based on the current time.
@@ -26,7 +31,7 @@ export default function CalendarWeekView() {
     <div className="flex h-full flex-col">
       <header className="relative z-20 flex flex-none items-center justify-between border-b border-gray-200 py-4 px-6">
         <h1 className="text-lg font-semibold text-gray-900">
-          <time dateTime="2022-01">January 2022</time>
+          <time dateTime="2022-01">{months[props.data.currentMonth-1]} {props.data.currentYear}</time>
         </h1>
         <div className="flex items-center">
           <div className="flex items-center rounded-md shadow-sm md:items-stretch">
@@ -268,47 +273,29 @@ export default function CalendarWeekView() {
                 S <span className="mt-1 flex h-8 w-8 items-center justify-center font-semibold text-gray-900">16</span>
               </button>
             </div>
-
+            {/* Need to figure out how to get the current week and do a mapping */}
             <div className="-mr-px hidden grid-cols-7 divide-x divide-gray-100 border-r border-gray-100 text-sm leading-6 text-gray-500 sm:grid">
               <div className="col-end-1 w-14" />
-              <div className="flex items-center justify-center py-3">
-                <span>
-                  Mon <span className="items-center justify-center font-semibold text-gray-900">10</span>
-                </span>
-              </div>
-              <div className="flex items-center justify-center py-3">
-                <span>
-                  Tue <span className="items-center justify-center font-semibold text-gray-900">11</span>
-                </span>
-              </div>
-              <div className="flex items-center justify-center py-3">
-                <span className="flex items-baseline">
-                  Wed{' '}
-                  <span className="ml-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 font-semibold text-white">
-                    12
-                  </span>
-                </span>
-              </div>
-              <div className="flex items-center justify-center py-3">
-                <span>
-                  Thu <span className="items-center justify-center font-semibold text-gray-900">13</span>
-                </span>
-              </div>
-              <div className="flex items-center justify-center py-3">
-                <span>
-                  Fri <span className="items-center justify-center font-semibold text-gray-900">14</span>
-                </span>
-              </div>
-              <div className="flex items-center justify-center py-3">
-                <span>
-                  Sat <span className="items-center justify-center font-semibold text-gray-900">15</span>
-                </span>
-              </div>
-              <div className="flex items-center justify-center py-3">
-                <span>
-                  Sun <span className="items-center justify-center font-semibold text-gray-900">16</span>
-                </span>
-              </div>
+              {weekDates.map((date, index) => {
+                let day = DateTime.fromISO(date).day.toString();
+                if(day === props.data.currentDay){
+                  return (
+                    <div className="flex items-center justify-center py-3">
+                      <span className="flex items-baseline">
+                        {weekdays[index]} <span className="ml-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 font-semibold text-white">{day}</span>
+                      </span>
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div className="flex items-center justify-center py-3">
+                      <span>
+                        {weekdays[index]} <span className="items-center justify-center font-semibold text-gray-900">{day}</span>
+                      </span>
+                    </div>
+                  );
+                }
+              })}
             </div>
           </div>
           <div className="flex flex-auto">
@@ -483,7 +470,37 @@ export default function CalendarWeekView() {
                 className="col-start-1 col-end-2 row-start-1 grid grid-cols-1 sm:grid-cols-7 sm:pr-8"
                 style={{ gridTemplateRows: '1.75rem repeat(288, minmax(0, 1fr)) auto' }}
               >
-                <li className="relative mt-px flex sm:col-start-3" style={{ gridRow: '74 / span 12' }}>
+                {/* 74 gives 6:00AM, 92 gives 7:30, 92 - 74 = 18 for 1.5 hours, meaning .5 hours requires 6, I don't like this weird wizardry 
+                    2 gives a position of 12am, so y position comes from 2 + # of half hours past 12am * 6, if there's a better way to do this please tell me
+                    col-start-3 is for wednesday meetings, the number refers to the day of the week, 2 is tuesday, 4 is thursday, etc.
+                */}
+                {events.map((event, index) => {
+                  let eventDate = DateTime.fromISO(event.time);
+                  let eventDay = eventDate.weekday;
+                  let className = "relative mt-px flex col-start-" + eventDay; //this will put the event in the correct column corresponding to its day
+                  let hour = eventDate.hour;
+                  let minutes = eventDate.minute;
+                  let start = 2 + 6*2*hour;
+                  if(minutes > 0){
+                    start = start + 6;
+                  }
+                  let dur = 6*event.duration;
+                  let gridRow = {gridRow: start + ' / span ' + dur};
+                  return (
+                    <li className={className} style={gridRow}>
+                      <a
+                        className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-blue-50 p-2 text-xs leading-5 hover:bg-blue-100"
+                      >
+                        <p className="order-1 font-semibold text-blue-700">{event.event}</p>
+                        <p className="text-blue-500 group-hover:text-blue-700">
+                          <time dateTime="2022-01-12T06:00">{eventDate.toLocaleString(DateTime.TIME_SIMPLE)}</time>
+                        </p>
+                      </a>
+                    </li>
+                  );
+
+                })}
+                {/*<li className="relative mt-px flex sm:col-start-3" style={{ gridRow: '2 / span 12' }}>
                   <a
                     href="#"
                     className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-blue-50 p-2 text-xs leading-5 hover:bg-blue-100"
@@ -515,7 +532,7 @@ export default function CalendarWeekView() {
                       <time dateTime="2022-01-15T10:00">10:00 AM</time>
                     </p>
                   </a>
-                </li>
+                </li>*/}
               </ol>
             </div>
           </div>

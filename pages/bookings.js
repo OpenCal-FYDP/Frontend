@@ -5,6 +5,7 @@ import CalendarWeekView from '../components/bookings/calendar-week-view'
 import Details from '../components/bookings/user-details'
 import NewEvent from '../components/bookings/new-event'
 import { useRouter } from 'next/router'
+import { DateTime } from 'luxon'
 
 function Sidebar(props) {
     const router = useRouter()
@@ -20,11 +21,11 @@ function Sidebar(props) {
     )
 }
 
-export default function Page() {
+export default function Page(props) {
 
     const { data: session, status } = useSession()
     const loading = status === 'loading'
-
+    console.log(props);
     // When rendering client side don't display anything until loading is complete
     if (typeof window !== 'undefined' && loading) return null
 
@@ -48,7 +49,7 @@ export default function Page() {
 
                             {/* Your content */}
                             {/* TODO: Insert calendar here! */}
-                            <CalendarWeekView></CalendarWeekView>
+                            <CalendarWeekView data={props.data}></CalendarWeekView>
                         </section>
 
                         {/* Secondary column (hidden on smaller screens) */}
@@ -64,3 +65,15 @@ export default function Page() {
         </Layout>
     )
 }
+
+export async function getServerSideProps(props){
+    //call apis to get data for preferences
+    const now = DateTime.now();
+    const monday = now.set({weekday: 1});
+    let data = { dates: [monday.toJSON()], currentMonth: now.month.toString(), currentDay: now.day.toString(), currentYear: now.year.toString() };
+    for(let i = 1; i < 7; i++){
+      let dayOfWeek = monday.plus({days: i});
+      data.dates.push(dayOfWeek.toJSON());
+    }
+    return { props: { data } }
+  }
