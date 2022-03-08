@@ -3,7 +3,7 @@ import { Fragment, useEffect, useRef, useState } from 'react'
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, DotsHorizontalIcon } from '@heroicons/react/solid'
 import { Menu, Transition } from '@headlessui/react'
 import Link from 'next/link'
-import { DateTime, Interval } from 'luxon'
+import { DateTime, Interval, Duration } from 'luxon'
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
@@ -13,10 +13,66 @@ export default function CalendarWeekView(props) {
   const container = useRef(null)
   const containerNav = useRef(null)
   const containerOffset = useRef(null)
-  const weekDates = props.data.dates;
+  //luxon datetime stuff
+  const now = DateTime.now();
+  const monday = now.set({weekday: 1});
+  const data = { dates: [monday.toJSON()], currentMonth: now.month, currentDay: now.day.toString(), currentYear: now.year, currentWeek: now.weekNumber };
+  for(let i = 1; i < 7; i++){
+    let dayOfWeek = monday.plus({days: i});
+    data.dates.push(dayOfWeek.toJSON());
+  }
   const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const events = [{event: "Group Meeting", time: "2022-03-01T20:00:00", duration: 2}, {event: "406 Lecture", time: "2022-03-01T11:30:00", duration: 3}, {event: "406 Lecture", time: "2022-03-02T11:30:00", duration: 3}]; //duration is number of half hour increments, could change but just for testing the event mappings this is fine 
+  const unavailableTime = [{workDayStart: "", workDayEnd: ""},{workDayStart: "", workDayEnd: ""},{workDayStart: "", workDayEnd: ""},{workDayStart: "", workDayEnd: ""},{workDayStart: "", workDayEnd: ""}]; //this has to do with the availability from the preferences page
+  const events = [{event: "Group Meeting", start: "2022-03-01T20:00:00", end:"2022-03-01T21:00:00", eventId: 1}, {event: "406 Lecture", start: "2022-03-01T11:30:00", end: "2022-03-01T13:00:00", eventId: 2}];
+  //react hooks 
+  const [week, setWeek] =  useState(data.currentWeek)
+  const [weekDates, setWeekDates] = useState(data.dates)
+  const [month, setMonth] = useState(data.currentMonth)
+  const [year, setYear] = useState(data.currentYear)
+
+  function updateWeekOnClick(input){
+    if (input === ">"){
+      const now = DateTime.now();
+      let weekNum = week;
+      let yearNum = year;
+      if(weekNum === 52){
+        weekNum = 1;
+        yearNum = year + 1;
+      } else{
+        weekNum = weekNum + 1;
+      }
+      let updatedWeek = now.set({weekNumber: weekNum, weekYear: yearNum});
+      setWeek(updatedWeek.weekNumber);
+      setMonth(updatedWeek.month);
+      setYear(updatedWeek.year);
+      let updatedWeekDates = [];
+      for(let i = 1; i <= 7; i++){
+        let day = updatedWeek.set({weekday: i});
+        updatedWeekDates.push(day.toJSON());
+      }
+      setWeekDates(updatedWeekDates);
+    } else if(input === "<"){
+      let weekNum = week;
+      let yearNum = year;
+      if(weekNum === 1){
+        weekNum = 52;
+        yearNum = year - 1;
+      } else{
+        weekNum = weekNum - 1;
+      }
+      let updatedWeek = now.set({weekNumber: weekNum, weekYear: yearNum});
+      setWeek(updatedWeek.weekNumber);
+      setMonth(updatedWeek.month);
+      setYear(updatedWeek.year);
+      let updatedWeekDates = [];
+      for(let i = 1; i <= 7; i++){
+        let day = updatedWeek.set({weekday: i});
+        updatedWeekDates.push(day.toJSON());
+      }
+      setWeekDates(updatedWeekDates);
+    }
+  }
 
   useEffect(() => {
     // Set the container scroll position based on the current time.
@@ -31,13 +87,14 @@ export default function CalendarWeekView(props) {
     <div className="flex h-full flex-col">
       <header className="relative z-20 flex flex-none items-center justify-between border-b border-gray-200 py-4 px-6">
         <h1 className="text-lg font-semibold text-gray-900">
-          <time dateTime="2022-01">{months[props.data.currentMonth-1]} {props.data.currentYear}</time>
+          <time dateTime="2022-01">{months[month-1]} {year}</time>
         </h1>
         <div className="flex items-center">
           <div className="flex items-center rounded-md shadow-sm md:items-stretch">
             <button
               type="button"
               className="flex items-center justify-center rounded-l-md border border-r-0 border-gray-300 bg-white py-2 pl-3 pr-4 text-gray-400 hover:text-gray-500 focus:relative md:w-9 md:px-2 md:hover:bg-gray-50"
+              onClick={e => updateWeekOnClick("<")}
             >
               <span className="sr-only">Previous month</span>
               <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
@@ -46,12 +103,13 @@ export default function CalendarWeekView(props) {
               type="button"
               className="hidden border-t border-b border-gray-300 bg-white px-3.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 focus:relative md:block"
             >
-              Today
+              {week === data.currentWeek? <div>Today</div>: <div>{now.set({weekNumber: week, weekYear: year}).toLocaleString(DateTime.DATE_MED)}</div>}
             </button>
             <span className="relative -mx-px h-5 w-px bg-gray-300 md:hidden" />
             <button
               type="button"
               className="flex items-center justify-center rounded-r-md border border-l-0 border-gray-300 bg-white py-2 pl-4 pr-3 text-gray-400 hover:text-gray-500 focus:relative md:w-9 md:px-2 md:hover:bg-gray-50"
+              onClick={e => updateWeekOnClick(">")}
             >
               <span className="sr-only">Next month</span>
               <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
@@ -278,7 +336,7 @@ export default function CalendarWeekView(props) {
               <div className="col-end-1 w-14" />
               {weekDates.map((date, index) => {
                 let day = DateTime.fromISO(date).day.toString();
-                if(day === props.data.currentDay){
+                if(day === data.currentDay && week === data.currentWeek){
                   return (
                     <div className="flex items-center justify-center py-3">
                       <span className="flex items-baseline">
@@ -475,29 +533,36 @@ export default function CalendarWeekView(props) {
                     col-start-3 is for wednesday meetings, the number refers to the day of the week, 2 is tuesday, 4 is thursday, etc.
                 */}
                 {events.map((event, index) => {
-                  let eventDate = DateTime.fromISO(event.time);
-                  let eventDay = eventDate.weekday;
-                  let className = "relative mt-px flex col-start-" + eventDay; //this will put the event in the correct column corresponding to its day
-                  let hour = eventDate.hour;
-                  let minutes = eventDate.minute;
-                  let start = 2 + 6*2*hour;
-                  if(minutes > 0){
-                    start = start + 6;
-                  }
-                  let dur = 6*event.duration;
-                  let gridRow = {gridRow: start + ' / span ' + dur};
-                  return (
-                    <li className={className} style={gridRow}>
-                      <a
-                        className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-blue-50 p-2 text-xs leading-5 hover:bg-blue-100"
-                      >
-                        <p className="order-1 font-semibold text-blue-700">{event.event}</p>
-                        <p className="text-blue-500 group-hover:text-blue-700">
-                          <time dateTime="2022-01-12T06:00">{eventDate.toLocaleString(DateTime.TIME_SIMPLE)}</time>
-                        </p>
-                      </a>
-                    </li>
-                  );
+                  let eventDate = DateTime.fromISO(event.start);
+                  if(eventDate.weekNumber === week && eventDate.year === year){
+                    let eventEnd = DateTime.fromISO(event.end);
+                    let duration = eventEnd.diff(eventDate, ['hours']);
+                    let eventDay = eventDate.weekday;
+                    let className = "relative mt-px flex col-start-" + eventDay; //this will put the event in the correct column corresponding to its day
+                    let hour = eventDate.hour;
+                    let minutes = eventDate.minute;
+                    let start = 2 + 6*2*hour;
+                    if(minutes > 0){
+                      start = start + 6;
+                    }
+                    let dur = 6*2*duration.hours;
+                    let gridRow = {gridRow: start + ' / span ' + dur};
+                    let eventPath = "../calendar-events/" + event.eventId;
+                    return (
+                      <li className={className} style={gridRow}>
+                        <Link href="../calendar-events/[eventId]" as={eventPath}>
+                        <a
+                          className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-blue-50 p-2 text-xs leading-5 hover:bg-blue-100"
+                        >
+                          <p className="order-1 font-semibold text-blue-700">{event.event}</p>
+                          <p className="text-blue-500 group-hover:text-blue-700">
+                            <time dateTime="2022-01-12T06:00">{eventDate.toLocaleString(DateTime.TIME_SIMPLE)}</time>
+                          </p>
+                        </a>
+                        </Link>
+                      </li>
+                    );
+                    }
 
                 })}
                 {/*<li className="relative mt-px flex sm:col-start-3" style={{ gridRow: '2 / span 12' }}>
