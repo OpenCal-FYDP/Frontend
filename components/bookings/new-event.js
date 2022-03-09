@@ -1,7 +1,9 @@
 import Flatpickr from "react-flatpickr";
 import "flatpickr/dist/themes/light.css";
+import Link from "next/link";
+import { useRouter } from "next/router";
 
-export default function NewEvent({ initialId, onSave }) {
+export default function NewEvent() {
 
     // TODO fill in API calls
     const registerEvent = async event => {
@@ -84,15 +86,17 @@ export default function NewEvent({ initialId, onSave }) {
 
                 <div className="pt-5">
                     <div className="flex justify-end">
-                        <button
-                            type="kys"
-                            className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                        // onClick={
-                        //     router.push("/")
-                        // }
-                        >
-                            Cancel
-                        </button>
+                        <Link href={{
+                            pathname: "/"
+                        }}>
+                            <a
+                                type="cancel"
+                                className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+
+                            >
+                                Cancel
+                            </a>
+                        </Link>
                         <button
                             type="submit"
                             className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"

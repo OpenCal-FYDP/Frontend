@@ -1,30 +1,55 @@
 import { useSession } from 'next-auth/react'
 import AccessDenied from '../../components/access-denied'
 import CalendarWeekView from '../../components/bookings/calendar-week-view'
-import Details from '../../components/bookings/user-details'
+import UserDetails from '../../components/bookings/user-details'
 import NewEvent from '../../components/bookings/new-event'
 import { useRouter } from 'next/router'
 import TeamDetails from '../../components/bookings/team-details'
 import Layout from '../../components/layout'
 
-function Sidebar(props) {
+function Sidebar() {
+    const { data: session, status } = useSession()
+    const router = useRouter()
+    const { bookingsType, bookings, newEvent } = router.query
     // TODO: Check route here and figure out whether to put Team-details or user-details
-    if (props.newEvent) {
+    if (newEvent) {
         return (<NewEvent></NewEvent>)
     }
-    if (props.user) {
-        return (
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <Details user={props.user}></Details>
-            </div>
-        )
-    } else {
+    if (bookingsType == "user") {
+        if (bookings == session.user.email) {
+            return (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <UserDetails user={session.user}></UserDetails>
+                </div>
+            )
+        } else {
+            return GetUser(bookings)
+        }
+    } else if (bookingsType == "teamCalendar") {
         return (
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <TeamDetails team={props.team}></TeamDetails>
             </div>
         )
+    } else {
+        return (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <p>Invalid bookings type in route: {bookingsType}</p>
+            </div>
+        )
     }
+}
+
+// TODO: Do GetUser API call!
+function GetUser(userEmail) {
+
+    
+
+    return (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <p>No such user {userEmail}</p>
+        </div>
+    )
 }
 
 // TODO: list of things to merge with Mark's calendar:
@@ -37,7 +62,7 @@ export default function Page() {
 
     const { data: session, status } = useSession()
     const router = useRouter()
-    const { bookingsType, bookings, newEvent } = router.query
+    const { bookingsType, bookings } = router.query
     const loading = status === 'loading'
 
     // When rendering client side don't display anything until loading is complete
@@ -79,9 +104,7 @@ export default function Page() {
                         <aside className="hidden lg:block lg:flex-shrink-0 lg:order-first">
                             <div className="h-full relative flex flex-col w-96 border-r border-gray-200 bg-white overflow-y-auto">
                                 {/* Your content */}
-                                <p>Bookings from route: {bookings}</p>
-                                <p>newEvent status: {newEvent}</p>
-                                <Sidebar user={session.user} newEvent={newEvent} ></Sidebar>
+                                <Sidebar></Sidebar>
                             </div>
                         </aside>
                     </main>

@@ -29,18 +29,9 @@ export default function CalendarWeekView(props) {
   const containerNav = useRef(null)
   const containerOffset = useRef(null)
 
-  // useEffect(() => {
-  //   // Set the container scroll position based on the current time.
-  //   const currentMinute = new Date().getHours() * 60
-  //   container.current.scrollTop =
-  //     ((container.current.scrollHeight - containerNav.current.offsetHeight - containerOffset.current.offsetHeight) *
-  //       currentMinute) /
-  //     1440
-  // }, [])
-
   //Router nonsense:
   const router = useRouter()
-  const { bookingsType, bookings } = router.query // bookingsType can be "user" or "teamCalendar"
+  const { bookingsType, bookings } = router.query // bookingsType can be "user" or "teamCalendar". // bookings will be your user email or team ID
   let calendarEvents; // TODO: Mark define this however you want.
   if (bookingsType == "user") {
     calendarEvents = getUserCalendarEvents();
@@ -52,8 +43,6 @@ export default function CalendarWeekView(props) {
 
   return (
     <div className="flex h-full flex-col">
-      <p>BookingsType (user or team): {bookingsType}</p>
-      <p>Bookings (user email or team name): {bookings}</p>
       <header className="relative z-20 flex flex-none items-center justify-between border-b border-gray-200 py-4 px-6">
         <h1 className="text-lg font-semibold text-gray-900">
           <time dateTime="2022-01">January 2022</time>
@@ -154,7 +143,6 @@ export default function CalendarWeekView(props) {
             </Menu>
             <div className="ml-6 h-6 w-px bg-gray-300" />
             <Link href={{
-              // pathname: router.asPath,
               query: { newEvent: true, bookingsType: bookingsType, bookings: bookings },
             }}>
               <a className="focus:outline-none ml-6 rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
