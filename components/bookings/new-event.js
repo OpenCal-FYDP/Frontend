@@ -1,10 +1,9 @@
-import { useState } from 'react'
 import Flatpickr from "react-flatpickr";
 import "flatpickr/dist/themes/light.css";
-import { Component } from "react";
 
 export default function NewEvent({ initialId, onSave }) {
 
+    // TODO fill in API calls
     const registerEvent = async event => {
         event.preventDefault()
 
