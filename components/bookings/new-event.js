@@ -1,8 +1,26 @@
-import Link from "next/link";
+import { useState } from 'react'
 import Flatpickr from "react-flatpickr";
 import "flatpickr/dist/themes/light.css";
+import { Component } from "react";
 
-export default function NewEvent() {
+export default function NewEvent({ initialId, onSave }) {
+
+    const registerEvent = async event => {
+        event.preventDefault()
+
+        const res = await fetch('/api/register', {
+            body: JSON.stringify({
+                name: event.target.name.value
+            }),
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            method: 'POST'
+        })
+
+        const result = await res.json()
+        // result.user => 'Ada Lovelace'
+    }
 
     return (
         <>
@@ -23,6 +41,7 @@ export default function NewEvent() {
                                         type="name"
                                         name="name"
                                         id="name"
+                                        onChange={(e) => setNewId(e.target.value)}
                                         className="shadow-sm focus:ring-indigo-500 border focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
                                     />
                                 </div>
@@ -36,6 +55,7 @@ export default function NewEvent() {
                                         type="date"
                                         name="date"
                                         id="date"
+                                        // ref={date => (this.date = date)}
                                         className="shadow-sm focus:ring-indigo-500 border focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
                                         data-enable-time
                                     />
@@ -43,13 +63,14 @@ export default function NewEvent() {
                             </div>
                             <div className="mt-4">
                                 <label htmlFor="length" className="block text-sm font-medium text-gray-700">
-                                    Length (minutes)
+                                    Length minutes (30 minute increments)
                                 </label>
                                 <div className="mt-1">
                                     <input
                                         type="length"
                                         name="length"
                                         id="length"
+                                        // ref={length => (this.length = length)}
                                         className="shadow-sm focus:ring-indigo-500 border focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
                                         placeholder="30"
                                     />
@@ -61,14 +82,21 @@ export default function NewEvent() {
 
                 <div className="pt-5">
                     <div className="flex justify-end">
-                        <Link href={{
-                            query: {},
-                        }}>
-                            <a className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Cancel</a>
-                        </Link>
+                        <button
+                            type="kys"
+                            className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                        // onClick={
+                        //     router.push("/")
+                        // }
+                        >
+                            Cancel
+                        </button>
                         <button
                             type="submit"
                             className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                            onClick={
+                                () => onSave(newId)
+                            }
                         >
                             Create event
                         </button>

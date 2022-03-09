@@ -1,28 +1,43 @@
 import { useSession } from 'next-auth/react'
-import Layout from '../components/layout'
-import AccessDenied from '../components/access-denied'
-import CalendarWeekView from '../components/bookings/calendar-week-view'
-import Details from '../components/bookings/user-details'
-import NewEvent from '../components/bookings/new-event'
+import AccessDenied from '../../components/access-denied'
+import CalendarWeekView from '../../components/bookings/calendar-week-view'
+import Details from '../../components/bookings/user-details'
+import NewEvent from '../../components/bookings/new-event'
 import { useRouter } from 'next/router'
+import TeamDetails from '../../components/bookings/team-details'
+import Layout from '../../components/layout'
 
 function Sidebar(props) {
-    const router = useRouter()
-    const { newEvent } = router.query
     // TODO: Check route here and figure out whether to put Team-details or user-details
-    if (newEvent) {
+    if (props.newEvent) {
         return (<NewEvent></NewEvent>)
     }
-    return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <Details user={props.user}></Details>
-        </div>
-    )
+    if (props.user) {
+        return (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <Details user={props.user}></Details>
+            </div>
+        )
+    } else {
+        return (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <TeamDetails team={props.team}></TeamDetails>
+            </div>
+        )
+    }
 }
+
+// TODO: list of things to merge with Mark's calendar:
+// 1. Props.
+// 2. New functions.
+// 3. New Event button needs to direct correctly. This includes 4. routing.
+// 4. Routing for new event button
 
 export default function Page() {
 
     const { data: session, status } = useSession()
+    const router = useRouter()
+    const { bookingsType, bookings, newEvent } = router.query
     const loading = status === 'loading'
 
     // When rendering client side don't display anything until loading is complete
@@ -30,6 +45,15 @@ export default function Page() {
 
     // If no session exists, display access denied message
     if (!session) { return <Layout><AccessDenied /></Layout> }
+
+    // Routing:
+    // If we get here from /bookings/self:
+    if (bookings == "self") {
+        router.push({
+            pathname: '/[bookingsType]/[bookings]',
+            query: { bookingsType: bookingsType, bookings: session.user.email },
+        })
+    }
 
     // If session exists, display content
     return (
@@ -47,7 +71,7 @@ export default function Page() {
                             </h1>
 
                             {/* Your content */}
-                            {/* TODO: Insert calendar here! */}
+                            {/* Insert calendar here! */}
                             <CalendarWeekView></CalendarWeekView>
                         </section>
 
@@ -55,7 +79,9 @@ export default function Page() {
                         <aside className="hidden lg:block lg:flex-shrink-0 lg:order-first">
                             <div className="h-full relative flex flex-col w-96 border-r border-gray-200 bg-white overflow-y-auto">
                                 {/* Your content */}
-                                <Sidebar user={session.user}></Sidebar>
+                                <p>Bookings from route: {bookings}</p>
+                                <p>newEvent status: {newEvent}</p>
+                                <Sidebar user={session.user} newEvent={newEvent} ></Sidebar>
                             </div>
                         </aside>
                     </main>
