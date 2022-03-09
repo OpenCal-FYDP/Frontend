@@ -8,23 +8,27 @@ export default function NewEvent({ initialId, onSave }) {
     const registerEvent = async event => {
         event.preventDefault()
 
-        const res = await fetch('/api/register', {
-            body: JSON.stringify({
-                name: event.target.name.value
-            }),
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            method: 'POST'
-        })
+        // const res = await fetch('/api/register', {
+        //     body: JSON.stringify({
+        //         name: event.target.name.value
+        //     }),
+        //     headers: {
+        //         'Content-Type': 'application/json'
+        //     },
+        //     method: 'POST'
+        // })
 
-        const result = await res.json()
-        // result.user => 'Ada Lovelace'
+        // const result = await res.json()
+
+        // These are the values we get when we hit the Create Event button!
+        console.log("event.target.name.value: " + event.target.name.value)
+        console.log("event.target.date.value: " + event.target.date.value)
+        console.log("event.target.length.value: " + event.target.length.value)
     }
 
     return (
         <>
-            <form className="bg-white py-6 px-4 space-y-6 sm:p-6">
+            <form className="bg-white py-6 px-4 space-y-6 sm:p-6" onSubmit={registerEvent}>
                 <div className="space-y-8 divide-y divide-gray-200">
                     <div>
                         <div>
@@ -41,7 +45,6 @@ export default function NewEvent({ initialId, onSave }) {
                                         type="name"
                                         name="name"
                                         id="name"
-                                        onChange={(e) => setNewId(e.target.value)}
                                         className="shadow-sm focus:ring-indigo-500 border focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
                                     />
                                 </div>
@@ -94,9 +97,6 @@ export default function NewEvent({ initialId, onSave }) {
                         <button
                             type="submit"
                             className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                            onClick={
-                                () => onSave(newId)
-                            }
                         >
                             Create event
                         </button>
