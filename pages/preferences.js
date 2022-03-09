@@ -12,10 +12,10 @@ import Link from 'next/link'
 import { DateTime, Interval, Duration } from 'luxon'
 import { client } from "twirpscript";
 import { nodeHttpTransport } from "twirpscript/dist/node/index.js";
-import {GetUserProfile, SetUserProfile} from "./api/preference-management/service.pb.js";
+import {GetUserProfile, SetUserProfile} from "../clients/preference-management/service.pb.js";
 
-client.baseURL = "http://localhost:8080";
-client.rpcTransport = nodeHttpTransport;
+client.baseURL = "https://bushdead.alpha.trylynk.sh";
+//client.rpcTransport = nodeHttpTransport;
 //Basically we'd call the api that gives us the availability timestrings and use it to populate the start and end times for a person's working hours
 const availabilityDefaults = {
     monday: {start: "", end: ""},
@@ -107,8 +107,8 @@ export default function Preferences(props) {
 
     async function getProfile(){
         const profile = await GetUserProfile({
-            userID: "test-user-id",
-        } );
+            email: "test@test2.com",
+        });
         
         console.log(profile);
     }
