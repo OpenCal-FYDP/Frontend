@@ -24,7 +24,7 @@ export default function CalendarWeekView(props) {
   const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const unavailableTime = [{workDayStart: "", workDayEnd: ""},{workDayStart: "", workDayEnd: ""},{workDayStart: "", workDayEnd: ""},{workDayStart: "", workDayEnd: ""},{workDayStart: "", workDayEnd: ""}, {workDayStart: "", workDayEnd:""}, {workDayStart: "", workDayEnd:""}]; //this has to do with the availability from the preferences page
-  const events = [{event: "Group Meeting", start: "2022-03-01T20:00:00", end:"2022-03-01T21:00:00", eventId: 1}, {event: "406 Lecture", start: "2022-03-01T11:30:00", end: "2022-03-01T13:00:00", eventId: 2}];
+  const events = [{event: "Group Meeting", start: "2022-03-07T20:00:00", end:"2022-03-07T21:00:00", eventId: 1}, {event: "406 Lecture", start: "2022-03-07T11:30:00", end: "2022-03-07T13:00:00", eventId: 2}, {start: "2022-03-08T20:00:00", end:"2022-03-08T21:00:00"}];
   //react hooks 
   const [week, setWeek] =  useState(data.currentWeek)
   const [weekDates, setWeekDates] = useState(data.dates)
@@ -548,56 +548,37 @@ export default function CalendarWeekView(props) {
                     let dur = 6*2*duration.hours;
                     let gridRow = {gridRow: start + ' / span ' + dur};
                     let eventPath = "../calendar-events/" + event.eventId;
-                    return (
-                      <li className={className} style={gridRow}>
-                        <Link href="../calendar-events/[eventId]" as={eventPath}>
-                        <a
-                          className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-blue-50 p-2 text-xs leading-5 hover:bg-blue-100"
-                        >
-                          <p className="order-1 font-semibold text-blue-700">{event.event}</p>
-                          <p className="text-blue-500 group-hover:text-blue-700">
-                            <time dateTime="2022-01-12T06:00">{eventDate.toLocaleString(DateTime.TIME_SIMPLE)}</time>
-                          </p>
-                        </a>
-                        </Link>
-                      </li>
-                    );
+                    if(event.hasOwnProperty('event')){
+                        return (
+                          <li className={className} style={gridRow}>
+                            <Link href="../calendar-events/[eventId]" as={eventPath}>
+                            <a
+                              className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-blue-50 p-2 text-xs leading-5 hover:bg-blue-100"
+                            >
+                              <p className="order-1 font-semibold text-blue-700">{event.event}</p>
+                              <p className="text-blue-500 group-hover:text-blue-700">
+                                <time dateTime="2022-01-12T06:00">{eventDate.toLocaleString(DateTime.TIME_SIMPLE)}</time>
+                              </p>
+                            </a>
+                            </Link>
+                          </li>
+                        );
+                    } else{
+                      return (
+                        <li className={className} style={gridRow}>
+                          <a
+                            className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-gray-50 p-2 text-xs leading-5 hover:bg-gray-100"
+                          >
+                            <p className="text-gray-500 group-hover:text-gray-700">
+                              <time dateTime="2022-01-12T06:00">{eventDate.toLocaleString(DateTime.TIME_SIMPLE)}</time>
+                            </p>
+                          </a>
+                        </li>
+                      );
                     }
+                  }
 
                 })}
-                {/*<li className="relative mt-px flex sm:col-start-3" style={{ gridRow: '2 / span 12' }}>
-                  <a
-                    href="#"
-                    className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-blue-50 p-2 text-xs leading-5 hover:bg-blue-100"
-                  >
-                    <p className="order-1 font-semibold text-blue-700">Breakfast</p>
-                    <p className="text-blue-500 group-hover:text-blue-700">
-                      <time dateTime="2022-01-12T06:00">6:00 AM</time>
-                    </p>
-                  </a>
-                </li>
-                <li className="relative mt-px flex sm:col-start-3" style={{ gridRow: '92 / span 30' }}>
-                  <a
-                    href="#"
-                    className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-pink-50 p-2 text-xs leading-5 hover:bg-pink-100"
-                  >
-                    <p className="order-1 font-semibold text-pink-700">Flight to Paris</p>
-                    <p className="text-pink-500 group-hover:text-pink-700">
-                      <time dateTime="2022-01-12T07:30">7:30 AM</time>
-                    </p>
-                  </a>
-                </li>
-                <li className="relative mt-px hidden sm:col-start-6 sm:flex" style={{ gridRow: '122 / span 24' }}>
-                  <a
-                    href="#"
-                    className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-gray-100 p-2 text-xs leading-5 hover:bg-gray-200"
-                  >
-                    <p className="order-1 font-semibold text-gray-700">Meeting with design team at Disney</p>
-                    <p className="text-gray-500 group-hover:text-gray-700">
-                      <time dateTime="2022-01-15T10:00">10:00 AM</time>
-                    </p>
-                  </a>
-                </li>*/}
               </ol>
             </div>
           </div>
