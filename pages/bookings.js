@@ -64,15 +64,3 @@ export default function Page(props) {
         </Layout>
     )
 }
-
-export async function getServerSideProps(props){
-    //call apis to get data for preferences
-    const now = DateTime.now();
-    const monday = now.set({weekday: 1});
-    let data = { dates: [monday.toJSON()], currentMonth: now.month.toString(), currentDay: now.day.toString(), currentYear: now.year.toString(), currentWeek: now.weekNumber };
-    for(let i = 1; i < 7; i++){
-      let dayOfWeek = monday.plus({days: i});
-      data.dates.push(dayOfWeek.toJSON());
-    }
-    return { props: { data } }
-  }
