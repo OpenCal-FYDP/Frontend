@@ -9,7 +9,13 @@ import AccessDenied from '../components/access-denied'
 import Select from 'react-select'
 import { data } from 'autoprefixer'
 import Link from 'next/link'
+import { DateTime, Interval, Duration } from 'luxon'
+import { client } from "twirpscript";
+import { nodeHttpTransport } from "twirpscript/dist/node/index.js";
+import {GetUserProfile, SetUserProfile} from "./api/preference-management/service.pb.js";
 
+client.baseURL = "http://localhost:8080";
+client.rpcTransport = nodeHttpTransport;
 //Basically we'd call the api that gives us the availability timestrings and use it to populate the start and end times for a person's working hours
 const availabilityDefaults = {
     monday: {start: "", end: ""},
@@ -75,14 +81,14 @@ const selectTimes = [
 
 const notificationSettings = [
     {value: "Off", label: "Off"},
-    {value: "Email notifications", label: "Desktop notifications"}
+    {value: "Email notifications", label: "Email notifications"}
 ]
 
 function classNames(...classes) {
     return classes.filter(Boolean).join(' ')
 }
 
-export default function Preferences() {
+export default function Preferences(props) {
     const [automaticTimezoneEnabled, setAutomaticTimezoneEnabled] = useState(true)
     const [autoUpdateApplicantDataEnabled, setAutoUpdateApplicantDataEnabled] = useState(false)
     const [availabilities, setAvailabilities] = useState(availabilityDefaults)
@@ -97,6 +103,14 @@ export default function Preferences() {
         let availabilityUpdated = availabilities;
         availabilityUpdated[day][startOrEndTime] = value;
         setAvailabilities(availabilityUpdated);
+    }
+
+    async function getProfile(){
+        const profile = await GetUserProfile({
+            userID: "test-user-id",
+        } );
+        
+        console.log(profile);
     }
     // When rendering client side don't display anything until loading is complete
     if (typeof window !== 'undefined' && loading) return null
@@ -190,6 +204,7 @@ export default function Preferences() {
                                                             <button
                                                                 type="button"
                                                                 className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                                                onClick={e => getProfile()}
                                                             >
                                                                 Update Availability
                                                             </button>
@@ -304,7 +319,7 @@ export async function getServerSideProps(context){
     //call apis to get data for preferences
     return {
         props: {
-          session: await getSession(context),
+          session: await getSession(context)
         },
     }
 }
