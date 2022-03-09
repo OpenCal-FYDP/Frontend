@@ -1,12 +1,35 @@
-import Link from "next/link";
 import Flatpickr from "react-flatpickr";
 import "flatpickr/dist/themes/light.css";
+import Link from "next/link";
+import { useRouter } from "next/router";
 
 export default function NewEvent() {
 
+    // TODO fill in API calls
+    const registerEvent = async event => {
+        event.preventDefault()
+
+        // const res = await fetch('/api/register', {
+        //     body: JSON.stringify({
+        //         name: event.target.name.value
+        //     }),
+        //     headers: {
+        //         'Content-Type': 'application/json'
+        //     },
+        //     method: 'POST'
+        // })
+
+        // const result = await res.json()
+
+        // These are the values we get when we hit the Create Event button!
+        console.log("event.target.name.value: " + event.target.name.value)
+        console.log("event.target.date.value: " + event.target.date.value)
+        console.log("event.target.length.value: " + event.target.length.value)
+    }
+
     return (
         <>
-            <form className="bg-white py-6 px-4 space-y-6 sm:p-6">
+            <form className="bg-white py-6 px-4 space-y-6 sm:p-6" onSubmit={registerEvent}>
                 <div className="space-y-8 divide-y divide-gray-200">
                     <div>
                         <div>
@@ -36,6 +59,7 @@ export default function NewEvent() {
                                         type="date"
                                         name="date"
                                         id="date"
+                                        // ref={date => (this.date = date)}
                                         className="shadow-sm focus:ring-indigo-500 border focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
                                         data-enable-time
                                     />
@@ -43,13 +67,14 @@ export default function NewEvent() {
                             </div>
                             <div className="mt-4">
                                 <label htmlFor="length" className="block text-sm font-medium text-gray-700">
-                                    Length (minutes)
+                                    Length minutes (30 minute increments)
                                 </label>
                                 <div className="mt-1">
                                     <input
                                         type="length"
                                         name="length"
                                         id="length"
+                                        // ref={length => (this.length = length)}
                                         className="shadow-sm focus:ring-indigo-500 border focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
                                         placeholder="30"
                                     />
@@ -62,9 +87,15 @@ export default function NewEvent() {
                 <div className="pt-5">
                     <div className="flex justify-end">
                         <Link href={{
-                            query: {},
+                            pathname: "/"
                         }}>
-                            <a className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Cancel</a>
+                            <a
+                                type="cancel"
+                                className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+
+                            >
+                                Cancel
+                            </a>
                         </Link>
                         <button
                             type="submit"

@@ -3,24 +3,43 @@ import { Fragment, useEffect, useRef } from 'react'
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, DotsHorizontalIcon } from '@heroicons/react/solid'
 import { Menu, Transition } from '@headlessui/react'
 import Link from 'next/link'
+import { useRouter } from 'next/router'
+import AccessDenied from '../access-denied'
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
-export default function CalendarWeekView() {
+// TODO: define return value however you want.
+function getUserCalendarEvents() {
+  console.log("get User CalendarEvents was called")
+  // TODO: fill in API calls here by Mark
+}
+
+// TODO: define return value however you want.
+function getTeamCalendarEvents() {
+  console.log("get Team CalendarEvents was called")
+  // TODO: fill in API calls here by Mark
+}
+
+
+export default function CalendarWeekView(props) {
+
   const container = useRef(null)
   const containerNav = useRef(null)
   const containerOffset = useRef(null)
 
-  useEffect(() => {
-    // Set the container scroll position based on the current time.
-    const currentMinute = new Date().getHours() * 60
-    container.current.scrollTop =
-      ((container.current.scrollHeight - containerNav.current.offsetHeight - containerOffset.current.offsetHeight) *
-        currentMinute) /
-      1440
-  }, [])
+  //Router nonsense:
+  const router = useRouter()
+  const { bookingsType, bookings } = router.query // bookingsType can be "user" or "teamCalendar". // bookings will be your user email or team ID
+  let calendarEvents; // TODO: Mark define this however you want.
+  if (bookingsType == "user") {
+    calendarEvents = getUserCalendarEvents();
+  } else if (bookingsType == "teamCalendar") {
+    calendarEvents = getTeamCalendarEvents();
+  } else {
+    return (<AccessDenied></AccessDenied>);
+  }
 
   return (
     <div className="flex h-full flex-col">
@@ -124,7 +143,7 @@ export default function CalendarWeekView() {
             </Menu>
             <div className="ml-6 h-6 w-px bg-gray-300" />
             <Link href={{
-              query: { newEvent: true },
+              query: { newEvent: true, bookingsType: bookingsType, bookings: bookings },
             }}>
               <a className="focus:outline-none ml-6 rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                 New event
