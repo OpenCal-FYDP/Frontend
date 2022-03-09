@@ -23,7 +23,7 @@ export default function CalendarWeekView(props) {
   }
   const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const unavailableTime = [{workDayStart: "", workDayEnd: ""},{workDayStart: "", workDayEnd: ""},{workDayStart: "", workDayEnd: ""},{workDayStart: "", workDayEnd: ""},{workDayStart: "", workDayEnd: ""}]; //this has to do with the availability from the preferences page
+  const unavailableTime = [{workDayStart: "", workDayEnd: ""},{workDayStart: "", workDayEnd: ""},{workDayStart: "", workDayEnd: ""},{workDayStart: "", workDayEnd: ""},{workDayStart: "", workDayEnd: ""}, {workDayStart: "", workDayEnd:""}, {workDayStart: "", workDayEnd:""}]; //this has to do with the availability from the preferences page
   const events = [{event: "Group Meeting", start: "2022-03-01T20:00:00", end:"2022-03-01T21:00:00", eventId: 1}, {event: "406 Lecture", start: "2022-03-01T11:30:00", end: "2022-03-01T13:00:00", eventId: 2}];
   //react hooks 
   const [week, setWeek] =  useState(data.currentWeek)
