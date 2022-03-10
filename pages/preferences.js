@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Switch } from '@headlessui/react'
 import { BellIcon } from '@heroicons/react/outline'
 import { SearchIcon } from '@heroicons/react/solid'
@@ -12,19 +12,19 @@ import Link from 'next/link'
 import { DateTime, Interval, Duration } from 'luxon'
 import { client } from "twirpscript";
 import { nodeHttpTransport } from "twirpscript/dist/node/index.js";
-import {GetUserProfile, SetUserProfile} from "../clients/preference-management/service.pb.js";
+import {GetUserProfile, SetUserProfile, SetAvailability, GetAvailability} from "../clients/preference-management/service.pb.js";
 
-client.baseURL = "https://bushdead.alpha.trylynk.sh";
+client.baseURL = "http://localhost:8080";
 //client.rpcTransport = nodeHttpTransport;
 //Basically we'd call the api that gives us the availability timestrings and use it to populate the start and end times for a person's working hours
 const availabilityDefaults = {
-    monday: {start: "", end: ""},
-    tuesday: {start: "", end: ""},
-    wednesday: {start: "", end: ""},
-    thursday: {start: "", end: ""},
-    friday: {start: "", end: ""},
-    saturday: {start: "", end: ""},
-    sunday: {start: "", end: ""}
+    Monday: [],
+    Tuesday: [],
+    Wednesday: [],
+    Thursday: [],
+    Friday: [],
+    Saturday: [],
+    Sunday: []
 }
 
 const selectTimes = [
@@ -91,27 +91,111 @@ function classNames(...classes) {
 export default function Preferences(props) {
     const [automaticTimezoneEnabled, setAutomaticTimezoneEnabled] = useState(true)
     const [autoUpdateApplicantDataEnabled, setAutoUpdateApplicantDataEnabled] = useState(false)
-    const [availabilities, setAvailabilities] = useState(availabilityDefaults)
+    const [availabilities, setAvailabilities] = useState([])
+    const [availToDay, setAvailToDay] = useState(availabilityDefaults)
     const { data: session, status } = useSession()
     const [teams, setTeams] = useState([])
     const email = session? session.user.email: "";
     const [calendars, setCalendars] = useState([{value: email, label: email}])
 
+    const weekdays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
     const loading = status === 'loading'
-
-    function updateAvailability(day, startOrEndTime, value){
+    const now = DateTime.now();
+    let dates = [];
+    for(let i = 1; i <= 7; i++){
+        let dayOfWeek = now.set({weekday: i});
+        dates.push(dayOfWeek);
+    }
+    //console.log(dates);
+    function updateAvailability(day,startOrEndTime, value){
+        let hours = Number(value.substring(0,2));
+        let minutes = Number(value.substring(3,5));
+        let seconds = Number(value.substring(6))
+        let time = new Date(value);
+        let date = DateTime.now();
+        let avail = date.set({weekday: day, hour: hours, minute: minutes, second: seconds});
         let availabilityUpdated = availabilities;
-        availabilityUpdated[day][startOrEndTime] = value;
+        let sameDay = []; //array of start and end date for current date
+        if(startOrEndTime === "start"){
+            //replace smaller instance of that day with the one from value
+            for(let i = 0; i < availabilityUpdated.length; i++){
+                let dayInAvail = DateTime.fromSeconds(Number(availabilityUpdated[i]));
+                if(dayInAvail.weekday === day){
+                    sameDay.push(dayInAvail.toSeconds());
+                }
+            }
+            if(sameDay.length > 1){
+                let min = Math.min(...sameDay);
+                let index = availabilityUpdated.indexOf(min.toString());
+                availabilityUpdated[index] = min.toString();
+
+            } else{
+                availabilityUpdated.push(avail.toSeconds().toString());
+            }
+        } else {
+            //replace smaller instance of that day with the one from value
+            for(let i = 0; i < availabilityUpdated.length; i++){
+                let dayInAvail = DateTime.fromSeconds(Number(availabilityUpdated[i]));
+                if(dayInAvail.weekday === day){
+                    sameDay.push(dayInAvail.toSeconds());
+                }
+            }
+            if(sameDay.length > 1){
+                let max = Math.max(...sameDay);
+                let index = availabilityUpdated.indexOf(max.toString());
+                availabilityUpdated[index] = max.toString();
+            } else{
+                availabilityUpdated.push(avail.toSeconds().toString());
+            }
+        }
+        console.log(availabilityUpdated);
         setAvailabilities(availabilityUpdated);
     }
 
+    function updateAvailToDay(avail){
+        let availToDayUpdated = {
+            Monday: [],
+            Tuesday: [],
+            Wednesday: [],
+            Thursday: [],
+            Friday: [],
+            Saturday: [],
+            Sunday: []
+        };
+        for(let i = 0; i < avail.length; i++){
+            let tmp = DateTime.fromSeconds(Number(avail[i]));
+            availToDayUpdated[weekdays[tmp.weekday - 1]].push(avail[i]);
+        }
+        setAvailToDay(availToDayUpdated);
+    }
+    
     async function getProfile(){
         const profile = await GetUserProfile({
             email: "test@test2.com",
         });
         
-        console.log(profile);
+        //console.log(profile);
     }
+
+    async function sendUpdatedAvailToServer(email){
+        //console.log(availabilities);
+        let sortedAvail = availabilities.sort();
+        await SetAvailability({
+            email: email,
+            timeAvailability: sortedAvail
+        })
+    }
+    async function getAvailabilities(email){
+        const avail = await GetAvailability({
+            email: email
+        });
+        const sortedAvail = avail.timeAvailability.sort();
+        updateAvailToDay(sortedAvail);
+        setAvailabilities(sortedAvail);
+    } 
+    useEffect(() => {
+        getAvailabilities(email);
+    }, []);
     // When rendering client side don't display anything until loading is complete
     if (typeof window !== 'undefined' && loading) return null
 
@@ -145,57 +229,57 @@ export default function Preferences(props) {
                                                         <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
                                                             <dt className="text-sm font-medium text-gray-500">Monday</dt>
                                                             <dd className="mt-1 flex flex-wrap items-center text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability("monday", "start", e.value)}/></span>
+                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability(1,"start", e.value)}/></span>
                                                                 <span className="ml-3"> - </span>
-                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability("monday", "end", e.value)}/></span>
+                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability(1,"end", e.value)}/></span>
                                                             </dd>
                                                         </div>
                                                         <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
                                                             <dt className="text-sm font-medium text-gray-500">Tuesday</dt>
                                                             <dd className="mt-1 flex flex-wrap items-center text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability("tuesday", "start", e.value)}/></span>
+                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability(2,"start", e.value)}/></span>
                                                                 <span className="ml-3"> - </span>
-                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability("tuesday", "end", e.value)}/></span>
+                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability(2,"end", e.value)}/></span>
                                                             </dd>
                                                         </div>
                                                         <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
                                                             <dt className="text-sm font-medium text-gray-500">Wednesday</dt>
                                                             <dd className="mt-1 flex flex-wrap items-center text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability("wednesday", "start", e.value)}/></span>
+                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability(3,"start", e.value)}/></span>
                                                                 <span className="ml-3"> - </span>
-                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability("wednesday", "end", e.value)}/></span>
+                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability(3,"end", e.value)}/></span>
                                                             </dd>
                                                         </div>
                                                         <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
                                                             <dt className="text-sm font-medium text-gray-500">Thursday</dt>
                                                             <dd className="mt-1 flex flex-wrap items-center text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability("thursday", "start", e.value)}/></span>
+                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability(4,"start", e.value)}/></span>
                                                                 <span className="ml-3"> - </span>
-                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability("thursday", "end", e.value)}/></span>
+                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability(4,"end", e.value)}/></span>
                                                             </dd>
                                                         </div>
                                                         <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
                                                             <dt className="text-sm font-medium text-gray-500">Friday</dt>
                                                             <dd className="mt-1 flex flex-wrap items-center text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability("friday", "start", e.value)}/></span>
+                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability(5,"start", e.value)}/></span>
                                                                 <span className="ml-3"> - </span>
-                                                                <span className="ml-3"><Select options={selectTimes}  onChange={e => updateAvailability("friday", "end", e.value)}/></span>
+                                                                <span className="ml-3"><Select options={selectTimes}  onChange={e => updateAvailability(5,"end", e.value)}/></span>
                                                             </dd>
                                                         </div>
                                                         <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
                                                             <dt className="text-sm font-medium text-gray-500">Saturday</dt>
                                                             <dd className="mt-1 flex flex-wrap items-center text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability("saturday", "start", e.value)}/></span>
+                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability(6,"start", e.value)}/></span>
                                                                 <span className="ml-3"> - </span>
-                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability("saturday", "end", e.value)}/></span>
+                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability(6,"end", e.value)}/></span>
                                                             </dd>
                                                         </div>
                                                         <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
                                                             <dt className="text-sm font-medium text-gray-500">Sunday</dt>
                                                             <dd className="mt-1 flex flex-wrap items-center text-sm text-gray-900 sm:mt-0 sm:col-span-2">
-                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability("sunday", "start", e.value)}/></span>
+                                                                <span className="ml-3"><Select options={selectTimes} onChange={e => updateAvailability(7,"start", e.value)}/></span>
                                                                 <span className="ml-3"> - </span>
-                                                                <span className="ml-3"><Select options={selectTimes}  onChange={e => updateAvailability("sunday", "end", e.value)}/></span>
+                                                                <span className="ml-3"><Select options={selectTimes}  onChange={e => updateAvailability(7,"end", e.value)}/></span>
                                                             </dd>
                                                         </div>
                                                         <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
@@ -204,7 +288,7 @@ export default function Preferences(props) {
                                                             <button
                                                                 type="button"
                                                                 className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                                                onClick={e => getProfile()}
+                                                                onClick={e => sendUpdatedAvailToServer(email)}
                                                             >
                                                                 Update Availability
                                                             </button>
