@@ -1,16 +1,56 @@
-import { useRouter } from 'next/router'
 import Layout from '../../components/layout'
-import { useSession, getSession } from 'next-auth/react'
+import { getSession } from 'next-auth/react'
 import Link from 'next/link'
-import { useState } from 'react'
-import AccessDenied from '../../components/access-denied'
 import "flatpickr/dist/themes/light.css";
 import Flatpickr from "react-flatpickr";
+import { useRouter } from 'next/router';
+import { useEffect } from 'react';
+import { GetUserProfile } from '../../clients/preference-management/service.pb';
 
-export default function event(){
+export default function event() {
+
+    // TODO fill in API calls
+    const rescheduleEvent = async event => {
+        event.preventDefault()
+
+        // const res = await fetch('/api/register', {
+        //     body: JSON.stringify({
+        //         name: event.target.name.value
+        //     }),
+        //     headers: {
+        //         'Content-Type': 'application/json'
+        //     },
+        //     method: 'POST'
+        // })
+
+        // const result = await res.json()
+
+        // These are the values we get when we hit the Create Event button!
+        console.log("event.target.name.value: " + event.target.name.value)
+        console.log("event.target.date.value: " + event.target.date.value)
+        console.log("event.target.length.value: " + event.target.length.value)
+    }
+
+    const getEvent = () => {
+        client.baseURL = "http://localhost:8080";
+        const profile = await GetUserProfile({
+            email: "test@test2.com",
+        });
+
+        console.log("Returned profile from API call Identity: " + profile);
+    }
+
+    const router = useRouter()
+    const { eventId } = router.query
+    console.log("eventID: " + eventId)
+
+    useEffect(async () => {
+        let result = await fetch
+    })
+
     return (<Layout>
         <>
-            <form className="bg-white py-6 px-4 space-y-6 sm:p-6">
+            <form className="bg-white py-6 px-4 space-y-6 sm:p-6" onSubmit={rescheduleEvent}>
                 <div className="space-y-8 divide-y divide-gray-200">
                     <div>
                         <div>
@@ -65,10 +105,10 @@ export default function event(){
 
                 <div className="pt-5">
                     <div className="flex justify-end">
-                        <Link href="../bookings">
+                        <Link href="/">
                             <a className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Back</a>
                         </Link>
-                        <Link href="../bookings">
+                        <Link href="/404">
                             <a className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500">Cancel Event</a>
                         </Link>
                         <button
@@ -84,11 +124,11 @@ export default function event(){
     </Layout>)
 }
 
-export async function getServerSideProps(context){
+export async function getServerSideProps(context) {
     //call apis to get data for preferences
     return {
         props: {
-          session: await getSession(context),
+            session: await getSession(context),
         },
     }
 }
