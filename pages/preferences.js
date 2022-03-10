@@ -13,8 +13,7 @@ import { DateTime, Interval, Duration } from 'luxon'
 import { client } from "twirpscript";
 import { nodeHttpTransport } from "twirpscript/dist/node/index.js";
 import {GetUserProfile, SetUserProfile, SetAvailability, GetAvailability} from "../clients/preference-management/service.pb.js";
-
-client.baseURL = "http://localhost:8080";
+import {GetTeam, GetUser, UpdateUser} from "../clients/identity/service.pb.js"
 //client.rpcTransport = nodeHttpTransport;
 //Basically we'd call the api that gives us the availability timestrings and use it to populate the start and end times for a person's working hours
 const availabilityDefaults = {
@@ -93,6 +92,7 @@ export default function Preferences(props) {
     const [autoUpdateApplicantDataEnabled, setAutoUpdateApplicantDataEnabled] = useState(false)
     const [availabilities, setAvailabilities] = useState([])
     const [availToDay, setAvailToDay] = useState(availabilityDefaults)
+    const [userFromIdentity, setUserFromIdentity] = useState({email: false})
     const { data: session, status } = useSession()
     const [teams, setTeams] = useState([])
     const email = session? session.user.email: "";
@@ -148,7 +148,6 @@ export default function Preferences(props) {
                 availabilityUpdated.push(avail.toSeconds().toString());
             }
         }
-        console.log(availabilityUpdated);
         setAvailabilities(availabilityUpdated);
     }
 
@@ -170,6 +169,7 @@ export default function Preferences(props) {
     }
     
     async function getProfile(){
+        client.baseURL = "http://localhost:8080";
         const profile = await GetUserProfile({
             email: "test@test2.com",
         });
@@ -179,6 +179,7 @@ export default function Preferences(props) {
 
     async function sendUpdatedAvailToServer(email){
         //console.log(availabilities);
+        client.baseURL = "http://localhost:8080";
         let sortedAvail = availabilities.sort();
         await SetAvailability({
             email: email,
@@ -186,15 +187,43 @@ export default function Preferences(props) {
         })
     }
     async function getAvailabilities(email){
+        client.baseURL = "http://localhost:8080";
         const avail = await GetAvailability({
             email: email
         });
         const sortedAvail = avail.timeAvailability.sort();
         updateAvailToDay(sortedAvail);
         setAvailabilities(sortedAvail);
-    } 
+    }
+    
+    async function initialAPICalls(email){
+        //Preferences Management
+        //TODO:
+        //this part was to auto populate the meeting availability section with existing data, but it's kind of a pain to show it in the UI so I'm leaving that as a TODO
+        client.baseURL = "http://localhost:8080";
+        const avail = await GetAvailability({
+            email: email
+        });
+        const sortedAvail = avail.timeAvailability.sort();
+        updateAvailToDay(sortedAvail);
+        setAvailabilities(sortedAvail);
+
+        //Identity Service 
+        client.baseURL = "http://localhost:8081";
+        const user = await GetUser({
+            email: email,
+            username: email
+        });
+        setUserFromIdentity(user);
+        if(user){
+            const team = await GetTeam({teamID: user.teamID}, () => {console.log("got team")}, () => {console.log("couldn't get team")});
+            if(team){
+                setTeams([{teamName: team.teamName, teamID: user.teamID}]);
+            }
+        }
+    }
     useEffect(() => {
-        getAvailabilities(email);
+        initialAPICalls(email);
     }, []);
     // When rendering client side don't display anything until loading is complete
     if (typeof window !== 'undefined' && loading) return null
@@ -360,10 +389,10 @@ export default function Preferences(props) {
                                                 <div className="mt-6">
                                                     <dl className="divide-y divide-gray-200">
                                                         {teams.map((team) => {
-                                                            let teamPath = "/team/" + team; //this should be teamID, will update once I have the GetTeam API built
+                                                            let teamPath = "/team/" + team.teamID; //this should be teamID, will update once I have the GetTeam API built
                                                             return (
                                                                 <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
-                                                                    <dt className="text-sm font-medium text-gray-500"><Link href="team/[teamID]" as={teamPath}><a>{team}</a></Link></dt>
+                                                                    <dt className="text-sm font-medium text-gray-500"><Link href="team/[teamID]" as={teamPath}><a>{team.teamName}</a></Link></dt>
                                                                     <dd className="mt-1 flex flex-wrap items-center text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                                                                     </dd>
                                                                 </div>
@@ -401,9 +430,18 @@ export default function Preferences(props) {
 
 export async function getServerSideProps(context){
     //call apis to get data for preferences
+    const session = await getSession(context);
+    /*console.log(session);
+    //console.log(session.data);
+    client.baseURL = "http://localhost:8081";
+    const user = await GetUser({
+        email: session.user.email
+    })*/
+    //console.log(user)
     return {
         props: {
-          session: await getSession(context)
-        },
+          session: session
+          //email: user
+        }
     }
 }

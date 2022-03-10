@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+option go_package = "/rpc";
+
+service IdentityService {
+  // accepts any combination of user identifiers and returns all know aliases (email, userID, username)
+  rpc GetUser(GetUserReq) returns (GetUserRes);
+  rpc UpdateUser(UpdateUserReq) returns (UpdateUserRes);
+
+  rpc GetTeam(GetTeamReq) returns (GetTeamRes);
+  rpc UpdateTeam(UpdateTeamReq) returns (UpdateTeamRes);
+}
+
+message GetUserReq {
+  string email = 1;
+  string username = 2;
+}
+message GetUserRes {
+  string email = 1;
+  string username = 2;
+  string teamID = 3;
+}
+
+message UpdateUserReq {
+  string email = 1;
+  string username = 2;
+  string teamID = 3;
+}
+
+message UpdateUserRes {}
+
+message GetTeamReq {
+  string teamID = 1;
+  string teamName = 2;
+}
+message GetTeamRes {
+  string teamID = 1;
+  string teamName = 2;
+  repeated string teamMembers = 3;
+}
+
+message UpdateTeamReq {
+  string teamID = 1;
+  string teamName = 2;
+  repeated string teamMembers = 3;
+}
+
+message UpdateTeamRes {}
