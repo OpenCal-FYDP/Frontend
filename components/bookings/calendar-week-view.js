@@ -1,38 +1,117 @@
 /* This example requires Tailwind CSS v2.0+ */
-import { Fragment, useEffect, useRef } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon, DotsHorizontalIcon } from '@heroicons/react/solid'
 import { Menu, Transition } from '@headlessui/react'
 import Link from 'next/link'
+import { DateTime, Interval, Duration } from 'luxon'
+import { useRouter } from 'next/router'
+import AccessDenied from '../access-denied'
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
 }
 
-export default function CalendarWeekView() {
+export default function CalendarWeekView(props) {
+// TODO: define return value however you want.
+function getUserCalendarEvents() {
+  console.log("get User CalendarEvents was called")
+  // TODO: fill in API calls here by Mark
+}
+
+// TODO: define return value however you want.
+function getTeamCalendarEvents() {
+  console.log("get Team CalendarEvents was called")
+  // TODO: fill in API calls here by Mark
+}
+
   const container = useRef(null)
   const containerNav = useRef(null)
   const containerOffset = useRef(null)
+  //luxon datetime stuff
+  const now = DateTime.now();
+  const monday = now.set({weekday: 1});
+  const data = { dates: [monday.toJSON()], currentMonth: now.month, currentDay: now.day.toString(), currentYear: now.year, currentWeek: now.weekNumber };
+  for(let i = 1; i < 7; i++){
+    let dayOfWeek = monday.plus({days: i});
+    data.dates.push(dayOfWeek.toJSON());
+  }
+  const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const unavailableTime = [{workDayStart: "", workDayEnd: ""},{workDayStart: "", workDayEnd: ""},{workDayStart: "", workDayEnd: ""},{workDayStart: "", workDayEnd: ""},{workDayStart: "", workDayEnd: ""}, {workDayStart: "", workDayEnd:""}, {workDayStart: "", workDayEnd:""}]; //this has to do with the availability from the preferences page
+  const events = [{event: "Group Meeting", start: "2022-03-07T20:00:00", end:"2022-03-07T21:00:00", eventId: 1}, {event: "406 Lecture", start: "2022-03-07T11:30:00", end: "2022-03-07T13:00:00", eventId: 2}, {start: "2022-03-08T20:00:00", end:"2022-03-08T21:00:00"}];
+  //react hooks 
+  const [week, setWeek] =  useState(data.currentWeek)
+  const [weekDates, setWeekDates] = useState(data.dates)
+  const [month, setMonth] = useState(data.currentMonth)
+  const [year, setYear] = useState(data.currentYear)
 
-  useEffect(() => {
-    // Set the container scroll position based on the current time.
-    const currentMinute = new Date().getHours() * 60
-    container.current.scrollTop =
-      ((container.current.scrollHeight - containerNav.current.offsetHeight - containerOffset.current.offsetHeight) *
-        currentMinute) /
-      1440
-  }, [])
+  function updateWeekOnClick(input){
+    if (input === ">"){
+      const now = DateTime.now();
+      let weekNum = week;
+      let yearNum = year;
+      if(weekNum === 52){
+        weekNum = 1;
+        yearNum = year + 1;
+      } else{
+        weekNum = weekNum + 1;
+      }
+      let updatedWeek = now.set({weekNumber: weekNum, weekYear: yearNum});
+      setWeek(updatedWeek.weekNumber);
+      setMonth(updatedWeek.month);
+      setYear(updatedWeek.year);
+      let updatedWeekDates = [];
+      for(let i = 1; i <= 7; i++){
+        let day = updatedWeek.set({weekday: i});
+        updatedWeekDates.push(day.toJSON());
+      }
+      setWeekDates(updatedWeekDates);
+    } else if(input === "<"){
+      let weekNum = week;
+      let yearNum = year;
+      if(weekNum === 1){
+        weekNum = 52;
+        yearNum = year - 1;
+      } else{
+        weekNum = weekNum - 1;
+      }
+      let updatedWeek = now.set({weekNumber: weekNum, weekYear: yearNum});
+      setWeek(updatedWeek.weekNumber);
+      setMonth(updatedWeek.month);
+      setYear(updatedWeek.year);
+      let updatedWeekDates = [];
+      for(let i = 1; i <= 7; i++){
+        let day = updatedWeek.set({weekday: i});
+        updatedWeekDates.push(day.toJSON());
+      }
+      setWeekDates(updatedWeekDates);
+    }
+  }
+
+  //Router nonsense:
+  const router = useRouter()
+  const { bookingsType, bookings } = router.query // bookingsType can be "user" or "teamCalendar". // bookings will be your user email or team ID
+  let calendarEvents; // TODO: Mark define this however you want.
+  if (bookingsType == "user") {
+    calendarEvents = getUserCalendarEvents();
+  } else if (bookingsType == "teamCalendar") {
+    calendarEvents = getTeamCalendarEvents();
+  } else {
+    return (<AccessDenied></AccessDenied>);
+  }
 
   return (
     <div className="flex h-full flex-col">
       <header className="relative z-20 flex flex-none items-center justify-between border-b border-gray-200 py-4 px-6">
         <h1 className="text-lg font-semibold text-gray-900">
-          <time dateTime="2022-01">January 2022</time>
+          <time dateTime="2022-01">{months[month-1]} {year}</time>
         </h1>
         <div className="flex items-center">
           <div className="flex items-center rounded-md shadow-sm md:items-stretch">
             <button
               type="button"
               className="flex items-center justify-center rounded-l-md border border-r-0 border-gray-300 bg-white py-2 pl-3 pr-4 text-gray-400 hover:text-gray-500 focus:relative md:w-9 md:px-2 md:hover:bg-gray-50"
+              onClick={e => updateWeekOnClick("<")}
             >
               <span className="sr-only">Previous month</span>
               <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
@@ -41,12 +120,13 @@ export default function CalendarWeekView() {
               type="button"
               className="hidden border-t border-b border-gray-300 bg-white px-3.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 focus:relative md:block"
             >
-              Today
+              {week === data.currentWeek? <div>Today</div>: <div>{now.set({weekNumber: week, weekYear: year}).toLocaleString(DateTime.DATE_MED)}</div>}
             </button>
             <span className="relative -mx-px h-5 w-px bg-gray-300 md:hidden" />
             <button
               type="button"
               className="flex items-center justify-center rounded-r-md border border-l-0 border-gray-300 bg-white py-2 pl-4 pr-3 text-gray-400 hover:text-gray-500 focus:relative md:w-9 md:px-2 md:hover:bg-gray-50"
+              onClick={e => updateWeekOnClick(">")}
             >
               <span className="sr-only">Next month</span>
               <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
@@ -124,7 +204,7 @@ export default function CalendarWeekView() {
             </Menu>
             <div className="ml-6 h-6 w-px bg-gray-300" />
             <Link href={{
-              query: { newEvent: true },
+              query: { newEvent: true, bookingsType: bookingsType, bookings: bookings },
             }}>
               <a className="focus:outline-none ml-6 rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                 New event
@@ -268,47 +348,29 @@ export default function CalendarWeekView() {
                 S <span className="mt-1 flex h-8 w-8 items-center justify-center font-semibold text-gray-900">16</span>
               </button>
             </div>
-
+            {/* Need to figure out how to get the current week and do a mapping */}
             <div className="-mr-px hidden grid-cols-7 divide-x divide-gray-100 border-r border-gray-100 text-sm leading-6 text-gray-500 sm:grid">
               <div className="col-end-1 w-14" />
-              <div className="flex items-center justify-center py-3">
-                <span>
-                  Mon <span className="items-center justify-center font-semibold text-gray-900">10</span>
-                </span>
-              </div>
-              <div className="flex items-center justify-center py-3">
-                <span>
-                  Tue <span className="items-center justify-center font-semibold text-gray-900">11</span>
-                </span>
-              </div>
-              <div className="flex items-center justify-center py-3">
-                <span className="flex items-baseline">
-                  Wed{' '}
-                  <span className="ml-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 font-semibold text-white">
-                    12
-                  </span>
-                </span>
-              </div>
-              <div className="flex items-center justify-center py-3">
-                <span>
-                  Thu <span className="items-center justify-center font-semibold text-gray-900">13</span>
-                </span>
-              </div>
-              <div className="flex items-center justify-center py-3">
-                <span>
-                  Fri <span className="items-center justify-center font-semibold text-gray-900">14</span>
-                </span>
-              </div>
-              <div className="flex items-center justify-center py-3">
-                <span>
-                  Sat <span className="items-center justify-center font-semibold text-gray-900">15</span>
-                </span>
-              </div>
-              <div className="flex items-center justify-center py-3">
-                <span>
-                  Sun <span className="items-center justify-center font-semibold text-gray-900">16</span>
-                </span>
-              </div>
+              {weekDates.map((date, index) => {
+                let day = DateTime.fromISO(date).day.toString();
+                if(day === data.currentDay && week === data.currentWeek){
+                  return (
+                    <div className="flex items-center justify-center py-3">
+                      <span className="flex items-baseline">
+                        {weekdays[index]} <span className="ml-1.5 flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 font-semibold text-white">{day}</span>
+                      </span>
+                    </div>
+                  );
+                } else {
+                  return (
+                    <div className="flex items-center justify-center py-3">
+                      <span>
+                        {weekdays[index]} <span className="items-center justify-center font-semibold text-gray-900">{day}</span>
+                      </span>
+                    </div>
+                  );
+                }
+              })}
             </div>
           </div>
           <div className="flex flex-auto">
@@ -483,39 +545,57 @@ export default function CalendarWeekView() {
                 className="col-start-1 col-end-2 row-start-1 grid grid-cols-1 sm:grid-cols-7 sm:pr-8"
                 style={{ gridTemplateRows: '1.75rem repeat(288, minmax(0, 1fr)) auto' }}
               >
-                <li className="relative mt-px flex sm:col-start-3" style={{ gridRow: '74 / span 12' }}>
-                  <a
-                    href="#"
-                    className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-blue-50 p-2 text-xs leading-5 hover:bg-blue-100"
-                  >
-                    <p className="order-1 font-semibold text-blue-700">Breakfast</p>
-                    <p className="text-blue-500 group-hover:text-blue-700">
-                      <time dateTime="2022-01-12T06:00">6:00 AM</time>
-                    </p>
-                  </a>
-                </li>
-                <li className="relative mt-px flex sm:col-start-3" style={{ gridRow: '92 / span 30' }}>
-                  <a
-                    href="#"
-                    className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-pink-50 p-2 text-xs leading-5 hover:bg-pink-100"
-                  >
-                    <p className="order-1 font-semibold text-pink-700">Flight to Paris</p>
-                    <p className="text-pink-500 group-hover:text-pink-700">
-                      <time dateTime="2022-01-12T07:30">7:30 AM</time>
-                    </p>
-                  </a>
-                </li>
-                <li className="relative mt-px hidden sm:col-start-6 sm:flex" style={{ gridRow: '122 / span 24' }}>
-                  <a
-                    href="#"
-                    className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-gray-100 p-2 text-xs leading-5 hover:bg-gray-200"
-                  >
-                    <p className="order-1 font-semibold text-gray-700">Meeting with design team at Disney</p>
-                    <p className="text-gray-500 group-hover:text-gray-700">
-                      <time dateTime="2022-01-15T10:00">10:00 AM</time>
-                    </p>
-                  </a>
-                </li>
+                {/* 74 gives 6:00AM, 92 gives 7:30, 92 - 74 = 18 for 1.5 hours, meaning .5 hours requires 6, I don't like this weird wizardry 
+                    2 gives a position of 12am, so y position comes from 2 + # of half hours past 12am * 6, if there's a better way to do this please tell me
+                    col-start-3 is for wednesday meetings, the number refers to the day of the week, 2 is tuesday, 4 is thursday, etc.
+                */}
+                {events.map((event, index) => {
+                  let eventDate = DateTime.fromISO(event.start);
+                  if(eventDate.weekNumber === week && eventDate.year === year){
+                    let eventEnd = DateTime.fromISO(event.end);
+                    let duration = eventEnd.diff(eventDate, ['hours']);
+                    let eventDay = eventDate.weekday;
+                    let className = "relative mt-px flex col-start-" + eventDay; //this will put the event in the correct column corresponding to its day
+                    let hour = eventDate.hour;
+                    let minutes = eventDate.minute;
+                    let start = 2 + 6*2*hour;
+                    if(minutes > 0){
+                      start = start + 6;
+                    }
+                    let dur = 6*2*duration.hours;
+                    let gridRow = {gridRow: start + ' / span ' + dur};
+                    let eventPath = "../calendar-events/" + event.eventId;
+                    if(event.hasOwnProperty('event')){
+                        return (
+                          <li className={className} style={gridRow}>
+                            <Link href="../calendar-events/[eventId]" as={eventPath}>
+                            <a
+                              className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-blue-50 p-2 text-xs leading-5 hover:bg-blue-100"
+                            >
+                              <p className="order-1 font-semibold text-blue-700">{event.event}</p>
+                              <p className="text-blue-500 group-hover:text-blue-700">
+                                <time dateTime="2022-01-12T06:00">{eventDate.toLocaleString(DateTime.TIME_SIMPLE)}</time>
+                              </p>
+                            </a>
+                            </Link>
+                          </li>
+                        );
+                    } else{
+                      return (
+                        <li className={className} style={gridRow}>
+                          <a
+                            className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-gray-50 p-2 text-xs leading-5 hover:bg-gray-100"
+                          >
+                            <p className="text-gray-500 group-hover:text-gray-700">
+                              <time dateTime="2022-01-12T06:00">{eventDate.toLocaleString(DateTime.TIME_SIMPLE)}</time>
+                            </p>
+                          </a>
+                        </li>
+                      );
+                    }
+                  }
+
+                })}
               </ol>
             </div>
           </div>
