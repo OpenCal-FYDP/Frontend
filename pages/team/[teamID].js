@@ -2,19 +2,98 @@ import { useRouter } from 'next/router'
 import Layout from '../../components/layout'
 import { useSession, getSession } from 'next-auth/react'
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import AccessDenied from '../../components/access-denied'
-
+import { uuid } from 'uuidv4';
+import { client } from "twirpscript";
+import {GetTeam, GetUser, UpdateUser, UpdateTeam} from "../../clients/identity/service.pb.js"
 export default function team(){
     const router = useRouter();
-    const teamData = { teamID: "", teamName: router.query.teamName, teamMembers: [] }; //need to set this up to be populated from GetTeam API
+    const teamData = { teamID: router.query.teamID, teamName: "", teamMembers: [] }; //need to set this up to be populated from GetTeam API
     const { data: session, status } = useSession();
     const email = session? session.user.email: "";
     const [teamMembers, setTeamMembers] = useState([email]); //let this be an empty array for now,
     const [teamMemberToAdd, setTeamMemberToAdd] = useState("");
     const [teamName, setTeamName] = useState(""); //let this be an empty array for now,
+    const [teamID, setTeamID] = useState(router.query.teamID);
     const loading = status === 'loading'
     // When rendering client side don't display anything until loading is complete
+
+    async function addMemberToTeamOnServer(member, id){
+        client.baseURL = "http://localhost:8081";
+        await UpdateUser({
+            username: member,
+            email: member,
+            teamID: id
+        }).then(() => {}, () => {console.log("can't add " + member + " to team")})
+    }
+    async function createTeam(){
+        client.baseURL = "http://localhost:8081";
+        let creatingTeamID = await uuid();
+        await UpdateTeam({
+            teamID: creatingTeamID,
+            teamName: teamName,
+            teamMembers: teamMembers
+        }).then(() => {
+            teamMembers.map((member) => addMemberToTeamOnServer(member, creatingTeamID))
+        })
+        return creatingTeamID;
+    }
+
+    async function editUserTeamStatus(member, id){
+        //if id is "" I think that will remove the user from the team
+        client.baseURL = "http://localhost:8081";
+        await UpdateUser({
+            username: member,
+            email: member,
+            teamID: id
+        }).then(() => {}, () => {console.log("can't update " + member + "'s team status")})
+    }
+
+    async function editTeam(teamName, id){
+        client.baseURL = "http://localhost:8081";
+        let teamInfo = await GetTeam({
+            teamID: id
+        }).then(async (res) => {
+            let membersToRemove = res.teamMembers.filter(item => !teamMembers.includes(item));
+            await UpdateTeam({
+                teamID: id,
+                teamName: teamName,
+                teamMembers: teamMembers
+            }).then(() => {
+                membersToRemove.map((member) => editUserTeamStatus(member, ""));
+            })
+        })
+        
+    }
+
+    async function leaveTeam(teamName, id, member){
+        client.baseURL = "http://localhost:8081";
+        let teamInfo = await GetTeam({
+            teamID: id
+        }).then(async (res) => {
+            await UpdateTeam({
+                teamID: id,
+                teamName: teamName,
+                teamMembers: teamMembers
+            }).then(() => {
+                editUserTeamStatus(member, "");
+            })
+        })
+        
+    }
+
+    useEffect(() => {
+        client.baseURL = "http://localhost:8081";
+        if(router.query.teamID !== "create"){
+            GetTeam({
+                teamID: router.query.teamID
+            }).then((res) => {
+                setTeamName(res.teamName);
+                setTeamMembers(res.teamMembers);
+            })
+        }
+    }, [session])
     if (typeof window !== 'undefined' && loading) return null
 
     // If no session exists, display access denied message
@@ -23,7 +102,7 @@ export default function team(){
     // If session exists, display content
     return (
         <Layout>
-            {teamData.teamName === "create"?
+            {teamData.teamID === "create"?
                 <div>
                 {/* Content area */}
                 <div>
@@ -125,16 +204,14 @@ export default function team(){
                                                         Add Team Member
                                                     </button>
                                                     </dl>
-                                                    <Link href={teamName || "create"}>
-                                                        {/*onClick should do an API call to create the team and then update the teamPath with the teamID obtained via the API call*/}
-                                                        <button
-                                                            type="button"
-                                                            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                                            onClick={teamName === ""? {} : console.log("team/" + teamName)}
-                                                        >
-                                                            Create Team
-                                                        </button>
-                                                    </Link>
+                                                    {/*onClick should do an API call to create the team and then update the teamPath with the teamID obtained via the API call*/}
+                                                    <button
+                                                        type="button"
+                                                        className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                                        onClick={teamName === ""? () => {} : () => createTeam().then((res) => router.push("/team/" + res))}
+                                                    >
+                                                        Create Team
+                                                    </button>
                                                     
                                                 </div>
                                             </div>
@@ -179,6 +256,8 @@ export default function team(){
                                                         id="team-name"
                                                         className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
                                                         placeholder="Your Team Name"
+                                                        value={teamName}
+                                                        readOnly
                                                         onChange={e => setTeamName(e.target.value)}
                                                     />
                                                     </div>
@@ -192,19 +271,20 @@ export default function team(){
                                                             </dt>
                                                             <dd className="mt-1 flex flex-wrap items-center text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                                                                 {member === email?
-                                                                    <Link href={"../preferences"}>
-                                                                        <button
-                                                                            type="button"
-                                                                            className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                                                            onClick={e => {
-                                                                                let tmp = teamMembers;
-                                                                                tmp.splice(index, 1);
-                                                                                setTeamMembers([...tmp]);
-                                                                            }}
-                                                                        >
-                                                                        Leave Team
-                                                                        </button>
-                                                                    </Link>
+                                                                    <button
+                                                                        type="button"
+                                                                        className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                                                                        onClick={async (e) => {
+                                                                            let tmp = teamMembers;
+                                                                            tmp.splice(index, 1);
+                                                                            console.log(tmp);
+                                                                            setTeamMembers([...tmp]);
+                                                                            leaveTeam(teamName, teamID, member);
+                                                                            router.push("../preferences");
+                                                                        }}
+                                                                    >
+                                                                    Leave Team
+                                                                    </button>
                                                                 :
                                                                 <button
                                                                     type="button"
@@ -252,12 +332,11 @@ export default function team(){
                                                     <button
                                                         type="button"
                                                         className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                                        onClick={e => {teamName === ""? {} : console.log("team/" + teamName)}}
+                                                        onClick={e => {teamName === ""? () => {} : editTeam(teamName, teamID)}}
                                                     >
                                                         Edit Team
                                                     </button>
-                                                    <Link href={"../preferences"}>
-                                                        {/*onClick should do an API call to create the team and then update the teamPath with the teamID obtained via the API call*/}
+                                                    {/*<Link href={"../preferences"}>
                                                         <button
                                                             type="button"
                                                             className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -265,7 +344,7 @@ export default function team(){
                                                         >
                                                             Delete Team
                                                         </button>
-                                                    </Link>
+                                                    </Link>*/}
                                                 </span>
                                                 
                                             </div>

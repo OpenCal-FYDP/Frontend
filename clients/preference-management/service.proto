@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+//package ${Package};
+option go_package = "/rpc";
+
+service PreferenceManagementService {
+  rpc GetUserProfile(GetUserProfileReq) returns (GetUserProfileRes);
+  rpc GetAvailability(GetAvailabilityReq) returns (GetAvailabilityRes);
+  rpc GetBooking(GetBookingReq) returns (GetBookingRes);
+  rpc SetUserProfile(SetUserProfileReq) returns (SetUserProfileRes);
+  rpc SetAvailability(SetAvailabilityReq) returns (SetAvailabilityRes);
+  rpc SetBooking(SetBookingReq) returns (SetBookingRes);
+}
+
+message GetUserProfileReq {
+  string email = 1;
+}
+
+message Settings {
+  string timeZone = 1;
+  string fullName = 2;
+  string timeFormat = 3; // iso date string
+  bool shouldDefragMeetings = 4;
+  bool AvoidMorningMeetings = 5;
+}
+
+message GetUserProfileRes {
+  string email = 1;
+  string username = 2;
+  repeated string timeAvailability = 3;
+  repeated string bookingLinks = 4;
+  Settings settings = 5;
+}
+
+message GetAvailabilityReq {
+  string email = 1;
+}
+
+message GetAvailabilityRes {
+  string email = 1;
+  string username = 2;
+  repeated string timeAvailability = 3;
+  repeated string bookingLinks = 4;
+  Settings settings = 5;
+}
+
+message GetBookingReq {
+  string email = 1;
+  string bookingLinkID = 2;
+}
+
+message GetBookingRes {
+  bool isActive = 1;
+  bool isMultiUse = 2;
+  repeated string attendees = 3;
+  string conferencing = 4;
+  repeated string timeIncrements = 5;
+  string recurrence = 6;
+  string availabilityToUse =7;
+}
+message SetUserProfileReq {
+  string email = 1;
+  string username = 2;
+  repeated string timeAvailability = 3;
+  repeated string bookingLinks = 4;
+  Settings settings = 5;
+}
+
+message SetUserProfileRes {}
+
+message SetAvailabilityReq {
+  string email = 1;
+  string username = 2;
+  repeated string timeAvailability = 3;
+  repeated string bookingLinks = 4;
+  Settings settings = 5;
+}
+
+message SetAvailabilityRes {}
+
+message SetBookingReq {
+  string bookingLinkID = 1;
+  bool isActive = 2;
+  bool isMultiUse = 3;
+  repeated string attendees = 4;
+  string conferencing = 5;
+  repeated string timeIncrements = 6;
+  string recurrence = 7;
+  string availabilityToUse = 8;
+}
+
+message SetBookingRes {}
