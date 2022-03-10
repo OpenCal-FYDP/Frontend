@@ -24,11 +24,11 @@ function Sidebar() {
                 </div>
             )
         } else {
-            return GetUser(bookings)
+            return getUserCalendarEvents(bookings)
         }
     } else if (bookingsType == "teamCalendar") {
         return (
-            GetTeam(bookings)
+            getTeamCalendarEvents(bookings)
         )
     } else {
         return (
@@ -40,9 +40,7 @@ function Sidebar() {
 }
 
 // TODO: Do GetUser API call!
-function GetUser(userEmail) {
-
-
+function getUserCalendarEvents(userEmail) {
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -52,7 +50,7 @@ function GetUser(userEmail) {
 }
 
 // TODO: Do GetUser API call!
-function GetTeam(teamID) {
+function getTeamCalendarEvents(teamID) {
 
     // API call here
 
@@ -133,12 +131,6 @@ export default function Page() {
 
 export async function getServerSideProps(props){
     //call apis to get data for preferences
-    const now = DateTime.now();
-    const monday = now.set({weekday: 1});
-    let data = { dates: [monday.toJSON()], currentMonth: now.month.toString(), currentDay: now.day.toString(), currentYear: now.year.toString(), currentWeek: now.weekNumber };
-    for(let i = 1; i < 7; i++){
-      let dayOfWeek = monday.plus({days: i});
-      data.dates.push(dayOfWeek.toJSON());
-    }
+    let data = "";
     return { props: { data } }
   }
