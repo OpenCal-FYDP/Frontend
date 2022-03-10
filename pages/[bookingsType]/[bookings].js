@@ -6,6 +6,7 @@ import NewEvent from '../../components/bookings/new-event'
 import { useRouter } from 'next/router'
 import TeamDetails from '../../components/bookings/team-details'
 import Layout from '../../components/layout'
+import { DateTime } from 'luxon'
 
 function Sidebar() {
     const { data: session, status } = useSession()
@@ -23,11 +24,11 @@ function Sidebar() {
                 </div>
             )
         } else {
-            return GetUser(bookings)
+            return getUserCalendarEvents(bookings)
         }
     } else if (bookingsType == "teamCalendar") {
         return (
-            GetTeam(bookings)
+            getTeamCalendarEvents(bookings)
         )
     } else {
         return (
@@ -39,9 +40,7 @@ function Sidebar() {
 }
 
 // TODO: Do GetUser API call!
-function GetUser(userEmail) {
-
-
+function getUserCalendarEvents(userEmail) {
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -51,7 +50,7 @@ function GetUser(userEmail) {
 }
 
 // TODO: Do GetUser API call!
-function GetTeam(teamID) {
+function getTeamCalendarEvents(teamID) {
 
     // API call here
 
@@ -129,3 +128,9 @@ export default function Page() {
         </Layout>
     )
 }
+
+export async function getServerSideProps(props){
+    //call apis to get data for preferences
+    let data = "";
+    return { props: { data } }
+  }
