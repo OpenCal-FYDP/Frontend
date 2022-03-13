@@ -7,7 +7,7 @@ import { useRouter } from "next/router";
 import { v4 as uuidv4 } from "uuid";
 import { now } from "next-auth/client/_utils";
 
-export default function NewEvent() {
+export default function NewEvent(props) {
 
     // TODO fill in API calls
     const registerEvent = async event => {
@@ -34,7 +34,7 @@ export default function NewEvent() {
             calendarId: uId,
             eventId: uId,
             event: e,
-            ownerOfEvent: "jspsun@gmail.com", // TODO: where to I get emails
+            ownerOfEvent: props.email, // TODO: where to I get emails
         }
 
         const res = await CreateEvent(req)

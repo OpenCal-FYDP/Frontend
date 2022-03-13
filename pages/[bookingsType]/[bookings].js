@@ -14,7 +14,7 @@ function Sidebar() {
     const { bookingsType, bookings, newEvent } = router.query
     // TODO: Check route here and figure out whether to put Team-details or user-details
     if (newEvent) {
-        return (<NewEvent></NewEvent>)
+        return (<NewEvent email={bookings} ></NewEvent>)
     }
     if (bookingsType == "user") {
         if (bookings == session.user.email) {
