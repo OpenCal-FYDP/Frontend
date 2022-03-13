@@ -6,6 +6,8 @@ import Link from 'next/link'
 import { DateTime, Interval, Duration } from 'luxon'
 import { useRouter } from 'next/router'
 import AccessDenied from '../access-denied'
+import { client } from "twirpscript";
+import {GetTeam, GetUser} from "../../clients/identity/service.pb.js"
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
@@ -13,15 +15,34 @@ function classNames(...classes) {
 
 export default function CalendarWeekView(props) {
 // TODO: define return value however you want.
-function getUserCalendarEvents() {
+function getUserCalendarEvents(userEmail) {
   console.log("get User CalendarEvents was called")
-  // TODO: fill in API calls here by Mark
+  userEmail = userEmail.replace("%40", "@") // sanitize the converted @ sign
+  // client.baseURL = "http://localhost:8080";
+  client.baseURL = "http://ec2-54-197-128-149.compute-1.amazonaws.com:8080";
+  let teamInfo = GetUser({
+      email: userEmail,
+      username: userEmail,
+  }).then(async (res) => {
+      // use the result here
+      console.log(res)
+  })
 }
 
 // TODO: define return value however you want.
-function getTeamCalendarEvents() {
+function getTeamCalendarEvents(teamID) {
   console.log("get Team CalendarEvents was called")
   // TODO: fill in API calls here by Mark
+  teamID = teamID.replace("%40", "@") //not sure if we need this here tbh
+  // API call here
+  // client.baseURL = "http://localhost:8080";
+  client.baseURL = "http://ec2-54-197-128-149.compute-1.amazonaws.com:8080";
+  let teamInfo = GetTeam({
+      teamID: teamID,
+  }).then(async (res) => {
+      // use the result here
+      console.log(res)
+  })
 }
 
   const container = useRef(null)
@@ -93,9 +114,9 @@ function getTeamCalendarEvents() {
   const { bookingsType, bookings } = router.query // bookingsType can be "user" or "teamCalendar". // bookings will be your user email or team ID
   let calendarEvents; // TODO: Mark define this however you want.
   if (bookingsType == "user") {
-    calendarEvents = getUserCalendarEvents();
+    calendarEvents = getUserCalendarEvents(bookings);
   } else if (bookingsType == "teamCalendar") {
-    calendarEvents = getTeamCalendarEvents();
+    calendarEvents = getTeamCalendarEvents(bookings);
   } else {
     return (<AccessDenied></AccessDenied>);
   }
