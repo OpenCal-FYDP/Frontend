@@ -4,13 +4,14 @@ import {GetTeam, GetUser, UpdateUser} from "../clients/identity/service.pb.js"
 import { useEffect, useState } from 'react'
 import { client } from "twirpscript";
 
-client.baseURL="http://localhost:8081";
+client.baseURL="http://ec2-54-197-128-149.compute-1.amazonaws.com:8080";
 export default function Example() {
     const { data: session } = useSession()
     async function updateUserOnSignIn(){
         if(session){
             await GetUser({
-                email: session.user.email
+                email: session.user.email,
+                username: session.user.email
             }).then(() => {
                 console.log("user is in database");
             }, async () => {
