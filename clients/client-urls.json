@@ -1,0 +1,6 @@
+{
+    "identity": "http://ec2-54-197-128-149.compute-1.amazonaws.com:8080",
+    "calendar_management": "http://ec2-34-227-242-82.compute-1.amazonaws.com:8080",
+    "group_meeting": "http://ec2-18-209-66-111.compute-1.amazonaws.com:8080",
+    "preference_management": "http://ec2-34-224-68-151.compute-1.amazonaws.com:8080"
+}

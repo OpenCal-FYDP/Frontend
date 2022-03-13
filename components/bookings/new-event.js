@@ -6,6 +6,7 @@ import { client } from "twirpscript";
 import { useRouter } from "next/router";
 import { v4 as uuidv4 } from "uuid";
 import { now } from "next-auth/client/_utils";
+import urls from "../../clients/client-urls.json";
 
 export default function NewEvent(props) {
 
@@ -13,7 +14,7 @@ export default function NewEvent(props) {
     const registerEvent = async event => {
         event.preventDefault()
 
-        client.baseURL = "http://ec2-34-227-242-82.compute-1.amazonaws.com:8080"
+        client.baseURL = urls.calendar_management;
         // client.baseURL ="http://localhost:8080"
 
         var t = Date.parse(event.target.date.value)
