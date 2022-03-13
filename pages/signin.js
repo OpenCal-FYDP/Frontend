@@ -3,8 +3,9 @@ import Layout from "../components/layout"
 import {GetTeam, GetUser, UpdateUser} from "../clients/identity/service.pb.js"
 import { useEffect, useState } from 'react'
 import { client } from "twirpscript";
+import urls from "../clients/client-urls.json";
 
-client.baseURL="http://ec2-54-197-128-149.compute-1.amazonaws.com:8080";
+client.baseURL=urls.identity;
 export default function Example() {
     const { data: session } = useSession()
     async function updateUserOnSignIn(){

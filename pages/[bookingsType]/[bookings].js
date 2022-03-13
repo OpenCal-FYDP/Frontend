@@ -9,6 +9,7 @@ import {GetTeam, GetUser} from "../../clients/identity/service.pb.js"
 import Layout from '../../components/layout'
 import { client } from "twirpscript";
 import { DateTime } from 'luxon'
+import urls from "../../clients/client-urls.json"
 
 function Sidebar() {
     const { data: session, status } = useSession()
@@ -45,7 +46,7 @@ function Sidebar() {
 function getUserCalendarEvents(userEmail) {
     userEmail = userEmail.replace("%40", "@") // sanitize the converted @ sign
     // client.baseURL = "http://localhost:8080";
-    client.baseURL = "http://ec2-54-197-128-149.compute-1.amazonaws.com:8080";
+    client.baseURL = urls.identity;
     let teamInfo = GetUser({
         email: userEmail,
         username: userEmail,
@@ -69,7 +70,7 @@ function getTeamCalendarEvents(teamID) {
     teamID = teamID.replace("%40", "@") //not sure if we need this here tbh
     // API call here
     // client.baseURL = "http://localhost:8080";
-    client.baseURL = "http://ec2-54-197-128-149.compute-1.amazonaws.com:8080";
+    client.baseURL = urls.identity;
     let teamInfo = GetTeam({
         teamID: teamID,
     }).then(async (res) => {
