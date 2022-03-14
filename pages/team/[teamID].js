@@ -23,11 +23,18 @@ export default function Team(){
 
     async function addMemberToTeamOnServer(member, id){
         client.baseURL = urls.identity;
-        await UpdateUser({
-            username: member,
+        await GetUser({
             email: member,
-            teamID: id
-        }).then(() => {}, () => {console.log("can't add " + member + " to team")})
+            username: member
+        }).then(async (res) => {
+            await UpdateUser({
+                username: member,
+                email: member,
+                teamID: id
+            }).then(() => {}, () => {console.log("can't add " + member + " to team")})
+        }, () => {
+            console.log("addMemberToTeamOnServer");
+        })
     }
     async function createTeam(){
         client.baseURL = urls.identity;
@@ -45,27 +52,39 @@ export default function Team(){
     async function editUserTeamStatus(member, id){
         //if id is "" I think that will remove the user from the team
         client.baseURL = urls.identity;
-        await UpdateUser({
-            username: member,
+        await GetUser({
             email: member,
-            teamID: id
-        }).then(() => {}, () => {console.log("can't update " + member + "'s team status")})
+            username: member
+        }).then(async (res) => {
+            await UpdateUser({
+                username: member,
+                email: member,
+                teamID: id,
+                oathToken: res.oathToken
+            }).then(() => {}, () => {console.log("can't update " + member + "'s team status")})
+        }, () => {
+            console.log("error in editUserTeamStatus");
+        })
     }
 
     async function editTeam(teamName, id){
         client.baseURL = urls.identity;
+        let response;
         let teamInfo = await GetTeam({
             teamID: id
         }).then(async (res) => {
-            let membersToRemove = res.teamMembers.filter(item => !teamMembers.includes(item));
+            response = res;
+        })
+        if(response){
+            let membersToRemove = response.teamMembers.filter(item => !teamMembers.includes(item));
             await UpdateTeam({
                 teamID: id,
                 teamName: teamName,
                 teamMembers: teamMembers
             }).then(() => {
-                membersToRemove.map((member) => editUserTeamStatus(member, ""));
+                membersToRemove.map(async (member) => await editUserTeamStatus(member, ""));
             })
-        })
+        }
         
     }
 
@@ -78,8 +97,8 @@ export default function Team(){
                 teamID: id,
                 teamName: teamName,
                 teamMembers: teamMembers
-            }).then(() => {
-                editUserTeamStatus(member, "");
+            }).then(async () => {
+                await editUserTeamStatus(member, "");
             })
         })
         
@@ -210,7 +229,10 @@ export default function Team(){
                                                     <button
                                                         type="button"
                                                         className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                                                        onClick={teamName === ""? () => {} : () => createTeam().then((res) => router.push("/team/" + res))}
+                                                        onClick={teamName === ""? () => {} : () => createTeam().then((res) => {
+                                                            setTeamID(res);
+                                                            router.push("/team/" + res);
+                                                        })}
                                                     >
                                                         Create Team
                                                     </button>
@@ -281,7 +303,7 @@ export default function Team(){
                                                                             tmp.splice(index, 1);
                                                                             console.log(tmp);
                                                                             setTeamMembers([...tmp]);
-                                                                            leaveTeam(teamName, teamID, member);
+                                                                            await leaveTeam(teamName, teamID, member);
                                                                             router.push("../preferences");
                                                                         }}
                                                                     >

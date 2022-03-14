@@ -8,6 +8,8 @@ import { useRouter } from 'next/router'
 import AccessDenied from '../access-denied'
 import { client } from "twirpscript";
 import {GetTeam, GetUser} from "../../clients/identity/service.pb.js"
+import {GetUserProfile, SetUserProfile, SetAvailability, GetAvailability} from "../../clients/preference-management/service.pb.js";
+import {GetUsersGcalEvents, GetTeamssGcalEvents} from "../../clients/cal-management/service.pb.js";
 import urls from "../../clients/client-urls.json";
 
 function classNames(...classes) {
@@ -15,6 +17,62 @@ function classNames(...classes) {
 }
 
 export default function CalendarWeekView(props) {
+
+console.log(props.calendarEvents);
+function sortDates(dates){
+  let datesTmp = [];
+  dates.forEach(date => {
+      datesTmp.push(Number(date));
+  })
+  datesTmp.sort(function(a,b) {
+      //https://stackoverflow.com/questions/1063007/how-to-sort-an-array-of-integers-correctly
+      return a - b;
+  });
+  let datesTmpStr = [];
+  datesTmp.forEach(date => {
+      datesTmpStr.push(date.toString());
+  })
+  return datesTmpStr;
+}
+
+async function getUserGcalEvents(userEmail){
+  client.baseURL = urls.calendar_management;
+  GetUsersGcalEvents({
+    username: userEmail,
+    email: userEmail
+  }).then((res) => {
+    let events = [];
+    res.eventIntervals.map((eventInterval) => {
+      events.push(eventInterval.split("-"));
+    });
+    for(let i = 0; i < events.length; i++){
+      events[i][0] = DateTime.fromSeconds(Number(events[i][0])); //convert to numbers so that DateTime.FromSeconds can be called on them
+      events[i][1] = DateTime.fromSeconds(Number(events[i][1]));
+    }
+    //console.log(events);
+    setCalendarEvents(events);
+  })
+}
+
+async function getTeamGcalEvents(teamID){
+  client.baseURL = urls.calendar_management;
+  GetTeamssGcalEvents({
+    teamID: teamID
+  }).then((res) => {
+    console.log(res);
+    let events = [];
+    res.eventIntervals.map((eventInterval) => {
+      events.push(eventInterval.split("-"));
+    });
+    for(let i = 0; i < events.length; i++){
+      events[i][0] = DateTime.fromSeconds(Number(events[i][0])); //convert to numbers so that DateTime.FromSeconds can be called on them
+      events[i][1] = DateTime.fromSeconds(Number(events[i][1]));
+    }
+    //console.log(events);
+    setCalendarEvents(events);
+  })
+}
+
 // TODO: define return value however you want.
 async function getUserCalendarEvents(userEmail) {
   console.log("get User CalendarEvents was called")
@@ -26,7 +84,7 @@ async function getUserCalendarEvents(userEmail) {
       username: userEmail,
   }).then(async (res) => {
       // use the result here
-      console.log(res)
+      //console.log(res);
   })
 }
 
@@ -46,6 +104,20 @@ async function getTeamCalendarEvents(teamID) {
   })
 }
 
+async function getUserAvailability(userEmail){
+  client.baseURL = urls.preference_management;
+  userEmail = userEmail.replace("%40", "@") // sanitize the converted @ sign
+  const avail = await GetAvailability({
+      email: userEmail
+  });
+  const sortedAvail = sortDates(avail.timeAvailability);
+  if(sortedAvail.length % 2 === 1){
+    sortedAvail.pop(); //we want 2 availabilities per day, a start time and an end time
+  }
+  setAvailabilities(sortedAvail);
+  //console.log(sortedAvail)
+}
+
   const container = useRef(null)
   const containerNav = useRef(null)
   const containerOffset = useRef(null)
@@ -59,14 +131,14 @@ async function getTeamCalendarEvents(teamID) {
   }
   const weekdays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  const unavailableTime = [{workDayStart: "", workDayEnd: ""},{workDayStart: "", workDayEnd: ""},{workDayStart: "", workDayEnd: ""},{workDayStart: "", workDayEnd: ""},{workDayStart: "", workDayEnd: ""}, {workDayStart: "", workDayEnd:""}, {workDayStart: "", workDayEnd:""}]; //this has to do with the availability from the preferences page
-  const events = [{event: "Group Meeting", start: "2022-03-07T20:00:00", end:"2022-03-07T21:00:00", eventId: 1}, {event: "406 Lecture", start: "2022-03-07T11:30:00", end: "2022-03-07T13:00:00", eventId: 2}, {start: "2022-03-08T20:00:00", end:"2022-03-08T21:00:00"}];
+  const events = [];//[{event: "Group Meeting", start: "2022-03-07T20:00:00", end:"2022-03-07T21:00:00", eventId: 1}, {event: "406 Lecture", start: "2022-03-07T11:30:00", end: "2022-03-07T13:00:00", eventId: 2}, {start: "2022-03-08T20:00:00", end:"2022-03-08T21:00:00"}];
   //react hooks 
   const [week, setWeek] =  useState(data.currentWeek)
   const [weekDates, setWeekDates] = useState(data.dates)
   const [month, setMonth] = useState(data.currentMonth)
   const [year, setYear] = useState(data.currentYear)
-  const [calendarEvents, setCalendarEvents] = useState([])
+  const [calendarEvents, setCalendarEvents] = useState(props.calendarEvents)
+  const [availabilities, setAvailabilities] = useState(props.availabilities)
 
   function updateWeekOnClick(input){
     if (input === ">"){
@@ -114,14 +186,15 @@ async function getTeamCalendarEvents(teamID) {
   //Router nonsense:
   const router = useRouter()
   const { bookingsType, bookings } = router.query // bookingsType can be "user" or "teamCalendar". // bookings will be your user email or team ID
-
-  useEffect(() => {
-    if (bookingsType == "user") {
-      getUserCalendarEvents(bookings);
-    } else if (bookingsType == "teamCalendar") {
-      getTeamCalendarEvents(bookings);
-    }
-  }, [router])
+  /*if (bookingsType == "user") {
+    getUserGcalEvents(bookings);
+    getUserAvailability(bookings);
+  } else if (bookingsType == "teamCalendar") {
+    getTeamGcalEvents(bookings);
+  }*/
+  /*useEffect(() => {
+    
+  }, [])*/
   //useffect has to be above this or vercel will probably freak out
   if((bookingsType !== "user") && (bookingsType !== "teamCalendar")){
     return (<AccessDenied></AccessDenied>);
@@ -576,6 +649,100 @@ async function getTeamCalendarEvents(teamID) {
                     2 gives a position of 12am, so y position comes from 2 + # of half hours past 12am * 6, if there's a better way to do this please tell me
                     col-start-3 is for wednesday meetings, the number refers to the day of the week, 2 is tuesday, 4 is thursday, etc.
                 */}
+                {props.availabilities.map((avail, index) => {
+                  //console.log(index);
+                  if(index % 2 === 0){
+                    //start time
+                    let availDate = DateTime.fromSeconds(Number(avail));
+                    let midnight = availDate.set({hour: 0, minute: 0});
+                    let duration = availDate.diff(midnight, ['hours']);
+                    let eventDay = availDate.weekday;
+                    let className = "relative mt-px flex col-start-" + eventDay; //this will put the event in the correct column corresponding to its day
+                    let dur = 6*2*duration.hours;
+                    let gridRow = {gridRow: 2 + ' / span ' + dur};
+                    return (
+                      <li className={className} style={gridRow}>
+                        <a
+                          className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-gray-200 p-2 text-xs leading-5 hover:bg-gray-300"
+                        >
+                          <p className="text-gray-500 group-hover:text-gray-900">
+                            <time dateTime="2022-01-12T06:00">{availDate.toLocaleString(DateTime.TIME_SIMPLE)}</time>
+                          </p>
+                        </a>
+                      </li>
+                    );
+                  } else {
+                    //end time
+                    let availDate = DateTime.fromSeconds(Number(avail));
+                    let day = availDate.day;
+                    let midnight = availDate.set({day: day + 1, hour: 0, minute: 0});
+                    let duration = midnight.diff(availDate, ['hours']);
+                    let eventDay = availDate.weekday;
+                    let className = "relative mt-px flex col-start-" + eventDay; //this will put the event in the correct column corresponding to its day
+                    let hour = availDate.hour;
+                    let minutes = availDate.minute;
+                    let start = 2 + 6*2*hour;
+                    if(minutes > 0){
+                      start = start + 6;
+                    }
+                    let dur = 6*2*duration.hours;
+                    let gridRow = {gridRow: start + ' / span ' + dur};
+                    return (
+                      <li className={className} style={gridRow}>
+                        <a
+                          className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-gray-200 p-2 text-xs leading-5 hover:bg-gray-300"
+                        >
+                          <p className="text-gray-500 group-hover:text-gray-900">
+                            <time dateTime="2022-01-12T06:00">{availDate.toLocaleString(DateTime.TIME_SIMPLE)}</time>
+                          </p>
+                        </a>
+                      </li>
+                    );
+                  }
+                })}
+                {props.calendarEvents.map((event, index) => {
+                  let eventDateTime = [DateTime.fromSeconds(event[0]), DateTime.fromSeconds(event[1])]
+                  if(eventDateTime[0].weekNumber === week && eventDateTime[0].year === year){
+                    let duration = eventDateTime[1].diff(eventDateTime[0], ['minutes']);
+                    let eventDay = eventDateTime[0].weekday;
+                    let className = "relative mt-px flex col-start-" + eventDay; //this will put the event in the correct column corresponding to its day
+                    let hour = eventDateTime[0].hour;
+                    let minutes = eventDateTime[0].minute;
+                    let start = 2 + 6*2*hour;
+                    if(minutes > 0){
+                      start = start + Math.round(minutes/5);
+                    }
+                    //console.log(duration.minutes);
+                    let dur = Math.round(duration.minutes/5);
+                    //console.log(dur);
+                    let gridRow = {gridRow: start + ' / span ' + dur};
+                    if((bookings.replace("%40", "@") !== props.user.email) && (bookingsType === "user")){
+                      return (
+                        <li className={className} style={gridRow}>
+                          <a
+                            className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-gray-200 p-2 text-xs leading-5 hover:bg-gray-300"
+                          >
+                            <p className="text-gray-500 group-hover:text-gray-900">
+                              <time dateTime="2022-01-12T06:00">{eventDateTime[0].toLocaleString(DateTime.TIME_SIMPLE)}</time>
+                            </p>
+                          </a>
+                        </li>
+                      );
+                    } else{
+                      return (
+                        <li className={className} style={gridRow}>
+                          <a
+                            className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-blue-50 p-2 text-xs leading-5 hover:bg-blue-100"
+                          >
+                            <p className="text-blue-500 group-hover:text-blue-700">
+                              <time dateTime="2022-01-12T06:00">{eventDateTime[0].toLocaleString(DateTime.TIME_SIMPLE)}</time>
+                            </p>
+                          </a>
+                        </li>
+                      );
+                    }
+                  }
+                })}
                 {events.map((event, index) => {
                   let eventDate = DateTime.fromISO(event.start);
                   if(eventDate.weekNumber === week && eventDate.year === year){
