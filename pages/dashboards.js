@@ -39,7 +39,7 @@ export default function Dashboards(props) {
             email: email,
             username: email
         });
-        console.log(user)
+        //console.log(user)
         const team = await GetTeam({teamID: user.teamID}, () => {console.log("got team")}, () => {console.log("couldn't get team")});
         if(team){
             setTeams([{teamName: team.teamName, teamID: user.teamID}]);

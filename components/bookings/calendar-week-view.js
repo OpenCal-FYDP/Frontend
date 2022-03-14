@@ -18,7 +18,7 @@ function classNames(...classes) {
 
 export default function CalendarWeekView(props) {
 
-console.log(props.calendarEvents);
+//console.log(props.calendarEvents);
 function sortDates(dates){
   let datesTmp = [];
   dates.forEach(date => {

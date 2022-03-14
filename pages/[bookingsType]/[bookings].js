@@ -20,9 +20,15 @@ function Sidebar(props) {
     const { bookingsType, bookings, newEvent } = router.query
     // TODO: Check route here and figure out whether to put Team-details or user-details
     if (newEvent) {
-        return (<NewEvent email={bookings} ></NewEvent>)
+        if(bookingsType === "teamCalendar"){
+            console.log(props.team);
+            return (<NewEvent email={session.user.email} attendees={props.team.teamMembers}></NewEvent>)
+        }
+        else {
+            return (<NewEvent email={bookings} attendees={[session.user.email, props.user]}></NewEvent>)
+        }
     }
-    if (bookingsType == "user") {
+    if (bookingsType === "user") {
         if (bookings == session.user.email) {
             return (
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -36,7 +42,7 @@ function Sidebar(props) {
                 </div>
             )
         }
-    } else if (bookingsType == "teamCalendar") {
+    } else if (bookingsType === "teamCalendar") {
         return (
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <UserDetails team={props.team} user={props.user}></UserDetails>
