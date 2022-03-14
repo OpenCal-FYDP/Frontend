@@ -2,7 +2,7 @@ import { useSession } from "next-auth/react"
 
 /* This example requires Tailwind CSS v2.0+ */
 const navigation = [
-  { name: 'Dashboard', href: '/user/self' },
+  { name: 'Dashboard', href: '/dashboards' },
   { name: 'Preferences', href: '/preferences' },
 ]
 

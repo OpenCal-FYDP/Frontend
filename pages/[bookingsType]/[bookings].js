@@ -1,4 +1,5 @@
 import { useSession } from 'next-auth/react'
+import { useEffect, useState } from 'react'
 import AccessDenied from '../../components/access-denied'
 import CalendarWeekView from '../../components/bookings/calendar-week-view'
 import UserDetails from '../../components/bookings/user-details'
@@ -11,7 +12,7 @@ import { client } from "twirpscript";
 import { DateTime } from 'luxon'
 import urls from "../../clients/client-urls.json"
 
-function Sidebar() {
+function Sidebar(props) {
     const { data: session, status } = useSession()
     const router = useRouter()
     const { bookingsType, bookings, newEvent } = router.query
@@ -27,11 +28,17 @@ function Sidebar() {
                 </div>
             )
         } else {
-            return getUserCalendarEvents(bookings)
+            return (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <UserDetails user={props.user}></UserDetails>
+                </div>
+            )
         }
     } else if (bookingsType == "teamCalendar") {
         return (
-            getTeamCalendarEvents(bookings)
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <UserDetails team={props.team}></UserDetails>
+            </div>
         )
     } else {
         return (
@@ -42,41 +49,8 @@ function Sidebar() {
     }
 }
 
-// TODO: Do GetUser API call!
-function getUserCalendarEvents(userEmail) {
-    userEmail = userEmail.replace("%40", "@") // sanitize the converted @ sign
-    // client.baseURL = "http://localhost:8080";
-    client.baseURL = urls.identity;
-    let teamInfo = GetUser({
-        email: userEmail,
-        username: userEmail,
-    }).then(async (res) => {
-        // use the result here
-        console.log(res)
-    })
-        
-
-
-
-    return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <p>No such user {userEmail}</p>
-        </div>
-    )
-}
-
 // TODO: Do GetTeam API call!
-function getTeamCalendarEvents(teamID) {
-    teamID = teamID.replace("%40", "@") //not sure if we need this here tbh
-    // API call here
-    // client.baseURL = "http://localhost:8080";
-    client.baseURL = urls.identity;
-    let teamInfo = GetTeam({
-        teamID: teamID,
-    }).then(async (res) => {
-        // use the result here
-        console.log(res)
-    })
+
         
 
 
@@ -86,14 +60,6 @@ function getTeamCalendarEvents(teamID) {
     //         <TeamDetails team={teamID}></TeamDetails>
     //     </div>
     // )
-
-
-    return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <p>No such team {teamID}</p>
-        </div>
-    )
-}
 
 // TODO: list of things to merge with Mark's calendar:
 // 1. Props.
@@ -107,7 +73,9 @@ export default function Page() {
     const router = useRouter()
     const { bookingsType, bookings } = router.query
     const loading = status === 'loading'
-
+    
+    const [user, setUser] = useState({})
+    const [team, setTeam] = useState(undefined)
     // When rendering client side don't display anything until loading is complete
     if (typeof window !== 'undefined' && loading) return null
 
@@ -122,6 +90,49 @@ export default function Page() {
             query: { bookingsType: bookingsType, bookings: session.user.email },
         })
     }
+    // TODO: Do GetUser API call!
+    async function getUserCalendarEvents(userEmail) {
+        userEmail = userEmail.replace("%40", "@") // sanitize the converted @ sign
+        // client.baseURL = "http://localhost:8080";
+        client.baseURL = urls.identity;
+        let userInfo;
+        await GetUser({
+            email: userEmail,
+            username: userEmail,
+        }).then((res) => {
+            // use the result here
+            userInfo = res;
+            setUser({email: userInfo.email, name: userInfo.username})
+        })
+        
+    }
+
+    async function getTeamCalendarEvents(teamID) {
+        teamID = teamID.replace("%40", "@") //not sure if we need this here tbh
+        // API call here
+        // client.baseURL = "http://localhost:8080";
+        client.baseURL = urls.identity;
+        await GetTeam({
+            teamID: teamID,
+        }).then(async (res) => {
+            // use the result here
+            setTeam({teamName: res.teamName, teamID: res.teamID})
+            console.log(res)
+        })
+    }
+
+    if (bookingsType == "user") {
+        getUserCalendarEvents(bookings);
+    } else if (bookingsType == "teamCalendar") {
+        getTeamCalendarEvents(bookings);
+    }
+    /*useEffect(() => {
+        if (bookingsType == "user") {
+            //getUserCalendarEvents(bookings);
+        } else if (bookingsType == "teamCalendar") {
+            //getTeamCalendarEvents(bookings);
+        }
+        }, [router])*/
 
     // If session exists, display content
     return (
@@ -147,7 +158,7 @@ export default function Page() {
                         <aside className="hidden lg:block lg:flex-shrink-0 lg:order-first">
                             <div className="h-full relative flex flex-col w-96 border-r border-gray-200 bg-white overflow-y-auto">
                                 {/* Your content */}
-                                <Sidebar></Sidebar>
+                                <Sidebar user={user} team={team}></Sidebar>
                             </div>
                         </aside>
                     </main>

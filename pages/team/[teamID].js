@@ -30,8 +30,7 @@ export default function team(){
             await UpdateUser({
                 username: member,
                 email: member,
-                teamID: id,
-                oathToken: res.oathToken
+                teamID: id
             }).then(() => {}, () => {console.log("can't add " + member + " to team")})
         }, () => {
             console.log("addMemberToTeamOnServer");
