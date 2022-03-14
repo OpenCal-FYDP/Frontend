@@ -5,13 +5,50 @@ import UserDetails from '../../components/bookings/user-details'
 import NewEvent from '../../components/bookings/new-event'
 import { useRouter } from 'next/router'
 import TeamDetails from '../../components/bookings/team-details'
-import {GetTeam, GetUser} from "../../clients/identity/service.pb.js"
+import { GetTeam, GetUser } from "../../clients/identity/service.pb.js"
 import Layout from '../../components/layout'
 import { client } from "twirpscript";
-import { DateTime } from 'luxon'
 import urls from "../../clients/client-urls.json"
+import { useEffect, useState } from 'react'
 
 function Sidebar() {
+
+    const getUser = (userEmail) => {
+        if (!userEmail || userEmail == "self") {
+            return (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <UserDetails email={"Loading..."} username={""}></UserDetails>
+                </div>
+            )
+        } 
+        userEmail = userEmail.replace("%40", "@") // sanitize the converted @ sign
+        client.baseURL = urls.identity;
+    
+        const [user, setUser] = useState(null)
+        const [isLoading, setLoading] = useState(false)
+        useEffect(async () => {
+            setLoading(true)
+            await GetUser({
+                email: userEmail,
+                username: userEmail,
+            }).then((res) => {
+                // use the result here
+                setLoading(false)
+                setUser(res)
+                console.log("RESULT: " + res)
+            })
+        }, [userEmail])
+    
+        if (!user) return <p>No profile data</p>
+    
+    
+        return (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <UserDetails email={user ? user.email : "No such user " + userEmail} username={user ? user.username : ""}></UserDetails>
+            </div>
+        )
+    }
+
     const { data: session, status } = useSession()
     const router = useRouter()
     const { bookingsType, bookings, newEvent } = router.query
@@ -23,15 +60,15 @@ function Sidebar() {
         if (bookings == session.user.email) {
             return (
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <UserDetails user={session.user}></UserDetails>
+                    <UserDetails username={session.user.name} email={session.user.email}></UserDetails>
                 </div>
             )
         } else {
-            return getUserCalendarEvents(bookings)
+            return getUser(bookings)
         }
     } else if (bookingsType == "teamCalendar") {
         return (
-            getTeamCalendarEvents(bookings)
+            getTeam(bookings)
         )
     } else {
         return (
@@ -42,31 +79,8 @@ function Sidebar() {
     }
 }
 
-// TODO: Do GetUser API call!
-function getUserCalendarEvents(userEmail) {
-    userEmail = userEmail.replace("%40", "@") // sanitize the converted @ sign
-    // client.baseURL = "http://localhost:8080";
-    client.baseURL = urls.identity;
-    let teamInfo = GetUser({
-        email: userEmail,
-        username: userEmail,
-    }).then(async (res) => {
-        // use the result here
-        console.log(res)
-    })
-        
-
-
-
-    return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <p>No such user {userEmail}</p>
-        </div>
-    )
-}
-
 // TODO: Do GetTeam API call!
-function getTeamCalendarEvents(teamID) {
+function getTeam(teamID) {
     teamID = teamID.replace("%40", "@") //not sure if we need this here tbh
     // API call here
     // client.baseURL = "http://localhost:8080";
@@ -77,7 +91,7 @@ function getTeamCalendarEvents(teamID) {
         // use the result here
         console.log(res)
     })
-        
+
 
 
 
@@ -157,8 +171,8 @@ export default function Page() {
     )
 }
 
-export async function getServerSideProps(props){
+export async function getServerSideProps(props) {
     //call apis to get data for preferences
     let data = "";
     return { props: { data } }
-  }
+}

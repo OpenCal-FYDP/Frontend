@@ -10,7 +10,6 @@ import urls from "../../clients/client-urls.json";
 
 export default function NewEvent(props) {
 
-    // TODO fill in API calls
     const registerEvent = async event => {
         event.preventDefault()
 

@@ -1,13 +1,15 @@
 import Layout from '../../components/layout'
-import { getSession } from 'next-auth/react'
+import { getSession, useSession } from 'next-auth/react'
 import Link from 'next/link'
 import "flatpickr/dist/themes/light.css";
 import Flatpickr from "react-flatpickr";
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
-import { GetUserProfile } from '../../clients/preference-management/service.pb';
+import { GetAvailability } from '../../clients/preference-management/service.pb';
+import { client } from 'twirpscript/dist';
 
 export default function event() {
+    let session = useSession()
 
     // TODO fill in API calls
     const rescheduleEvent = async event => {
@@ -31,13 +33,12 @@ export default function event() {
         console.log("event.target.length.value: " + event.target.length.value)
     }
 
-    const getEvent = () => {
+    async function getAvailabilities(email){
         client.baseURL = "http://localhost:8080";
-        const profile = await GetUserProfile({
-            email: "test@test2.com",
+        const avail = await GetAvailability({
+            email: "markbranton99@gmail.com"
         });
-
-        console.log("Returned profile from API call Identity: " + profile);
+        return avail.timeAvailability.sort();
     }
 
     const router = useRouter()
@@ -45,7 +46,8 @@ export default function event() {
     console.log("eventID: " + eventId)
 
     useEffect(async () => {
-        let result = await fetch
+        let result = getAvailabilities()
+        console.log("GetAvailabilities from API: " + result);
     })
 
     return (<Layout>
