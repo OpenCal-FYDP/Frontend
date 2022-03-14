@@ -26,9 +26,9 @@ export default function NewEvent(props) {
             Start: Math.floor(t/1000),
             end: Math.floor(t/1000+event.target.length.value*60),
             recurrence: [],
-            attendees: [],
+            attendees: props.attendees,
         }
-
+        console.log(e);
         const uId = uuidv4().replaceAll('-', '')
 
         const req = {
