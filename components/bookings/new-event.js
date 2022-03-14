@@ -10,7 +10,7 @@ import urls from "../../clients/client-urls.json";
 
 export default function NewEvent(props) {
 
-    const registerEvent = async Event => {
+    // const registerEvent = async Event => {
         // Event.preventDefault()
 
         // client.baseURL = urls.calendar_management;
@@ -45,11 +45,11 @@ export default function NewEvent(props) {
         // console.log("event.target.name.value: " + Event.target.name.value)
         // console.log("event.target.date.value: " + Event.target.date.value)
         // console.log("event.target.length.value: " + Event.target.length.value)
-    }
+    // }
 
     return (
         <>
-            <form className="bg-white py-6 px-4 space-y-6 sm:p-6" onSubmit={registerEvent}>
+            <form className="bg-white py-6 px-4 space-y-6 sm:p-6" /*onSubmit={registerEvent}*/>
                 <div className="space-y-8 divide-y divide-gray-200">
                     <div>
                         <div>
