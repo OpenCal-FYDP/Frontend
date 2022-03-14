@@ -7,7 +7,9 @@ import AccessDenied from '../../components/access-denied'
 import { uuid } from 'uuidv4';
 import { client } from "twirpscript";
 import {GetTeam, GetUser, UpdateUser, UpdateTeam} from "../../clients/identity/service.pb.js"
-export default function team(){
+import urls from "../../clients/client-urls.json";
+
+export default function Team(){
     const router = useRouter();
     const teamData = { teamID: router.query.teamID, teamName: "", teamMembers: [] }; //need to set this up to be populated from GetTeam API
     const { data: session, status } = useSession();
@@ -20,7 +22,7 @@ export default function team(){
     // When rendering client side don't display anything until loading is complete
 
     async function addMemberToTeamOnServer(member, id){
-        client.baseURL = "http://localhost:8081";
+        client.baseURL = urls.identity;
         await UpdateUser({
             username: member,
             email: member,
@@ -28,7 +30,7 @@ export default function team(){
         }).then(() => {}, () => {console.log("can't add " + member + " to team")})
     }
     async function createTeam(){
-        client.baseURL = "http://localhost:8081";
+        client.baseURL = urls.identity;
         let creatingTeamID = await uuid();
         await UpdateTeam({
             teamID: creatingTeamID,
@@ -42,7 +44,7 @@ export default function team(){
 
     async function editUserTeamStatus(member, id){
         //if id is "" I think that will remove the user from the team
-        client.baseURL = "http://localhost:8081";
+        client.baseURL = urls.identity;
         await UpdateUser({
             username: member,
             email: member,
@@ -51,7 +53,7 @@ export default function team(){
     }
 
     async function editTeam(teamName, id){
-        client.baseURL = "http://localhost:8081";
+        client.baseURL = urls.identity;
         let teamInfo = await GetTeam({
             teamID: id
         }).then(async (res) => {
@@ -68,7 +70,7 @@ export default function team(){
     }
 
     async function leaveTeam(teamName, id, member){
-        client.baseURL = "http://localhost:8081";
+        client.baseURL = urls.identity;
         let teamInfo = await GetTeam({
             teamID: id
         }).then(async (res) => {
@@ -84,7 +86,7 @@ export default function team(){
     }
 
     useEffect(() => {
-        client.baseURL = "http://localhost:8081";
+        client.baseURL = urls.identity;
         if(router.query.teamID !== "create"){
             GetTeam({
                 teamID: router.query.teamID

@@ -14,6 +14,7 @@ import { client } from "twirpscript";
 import { nodeHttpTransport } from "twirpscript/dist/node/index.js";
 import {GetUserProfile, SetUserProfile, SetAvailability, GetAvailability} from "../clients/preference-management/service.pb.js";
 import {GetTeam, GetUser, UpdateUser} from "../clients/identity/service.pb.js"
+import urls from "../clients/client-urls.json"
 //client.rpcTransport = nodeHttpTransport;
 //Basically we'd call the api that gives us the availability timestrings and use it to populate the start and end times for a person's working hours
 const availabilityDefaults = {
@@ -169,7 +170,7 @@ export default function Preferences(props) {
     }
     
     async function getProfile(){
-        client.baseURL = "http://localhost:8080";
+        client.baseURL = urls.preference_management;
         const profile = await GetUserProfile({
             email: "test@test2.com",
         });
@@ -179,7 +180,7 @@ export default function Preferences(props) {
 
     async function sendUpdatedAvailToServer(email){
         //console.log(availabilities);
-        client.baseURL = "http://localhost:8080";
+        client.baseURL = urls.preference_management;
         let sortedAvail = availabilities.sort();
         await SetAvailability({
             email: email,
@@ -187,7 +188,7 @@ export default function Preferences(props) {
         })
     }
     async function getAvailabilities(email){
-        client.baseURL = "http://localhost:8080";
+        client.baseURL = urls.preference_management;
         const avail = await GetAvailability({
             email: email
         });
@@ -200,7 +201,7 @@ export default function Preferences(props) {
         //Preferences Management
         //TODO:
         //this part was to auto populate the meeting availability section with existing data, but it's kind of a pain to show it in the UI so I'm leaving that as a TODO
-        client.baseURL = "http://localhost:8080";
+        client.baseURL = urls.preference_management;
         const avail = await GetAvailability({
             email: email
         });
@@ -209,22 +210,25 @@ export default function Preferences(props) {
         setAvailabilities(sortedAvail);
 
         //Identity Service 
-        client.baseURL = "http://localhost:8081";
-        const user = await GetUser({
+        client.baseURL = urls.identity;
+        await GetUser({
             email: email,
             username: email
-        });
-        setUserFromIdentity(user);
-        if(user){
-            const team = await GetTeam({teamID: user.teamID}, () => {console.log("got team")}, () => {console.log("couldn't get team")});
-            if(team){
-                setTeams([{teamName: team.teamName, teamID: user.teamID}]);
+        }).then(async (res) => {
+            setUserFromIdentity(res);
+            if(res){
+                const team = await GetTeam({teamID: res.teamID}, () => {console.log("got team")}, () => {console.log("couldn't get team")});
+                if(team){
+                    setTeams([{teamName: team.teamName, teamID: res.teamID}]);
+                }
             }
-        }
+        }, () => {
+            console.log("error in GetUser")
+        });
     }
     useEffect(() => {
         initialAPICalls(email);
-    }, []);
+    }, [session]);
     // When rendering client side don't display anything until loading is complete
     if (typeof window !== 'undefined' && loading) return null
 
@@ -391,7 +395,7 @@ export default function Preferences(props) {
                                                         {teams.map((team) => {
                                                             let teamPath = "/team/" + team.teamID; //this should be teamID, will update once I have the GetTeam API built
                                                             return (
-                                                                <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+                                                                <div key={team.teamID} className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
                                                                     <dt className="text-sm font-medium text-gray-500"><Link href="team/[teamID]" as={teamPath}><a>{team.teamName}</a></Link></dt>
                                                                     <dd className="mt-1 flex flex-wrap items-center text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                                                                     </dd>

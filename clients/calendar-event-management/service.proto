@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+option go_package = "/rpc";
+
+service CalendarEventManagementService {
+  // return the created event if successful
+  rpc CreateEvent(CreateEventReq) returns (CreateEventRes);
+
+  // return the updated event if successful
+  rpc UpdateEvent(UpdateEventReq) returns (UpdateEventRes);
+  rpc DeleteEvent(DeleteEventReq) returns (DeleteEventRes);
+}
+
+// implemented to google’s spec https://developers.google.com/calendar/api/guides/create-events
+message CalEvent {
+  string summary = 1;
+  string location = 2;
+  string Start = 3; //iso timestamp
+  string end = 4; //iso timestamp
+  repeated string recurrence = 5;
+  repeated string attendees = 6;
+}
+
+message CreateEventReq {
+  string calendarId = 1;
+  string eventId = 2;
+  CalEvent event = 3;
+}
+
+message CreateEventRes {
+  string calendarId = 1;
+  string eventId = 2;
+  CalEvent event = 3;
+}
+
+message UpdateEventReq {
+  string calendarId = 1;
+  string eventId = 2;
+  CalEvent event = 3;
+}
+
+message UpdateEventRes {
+  string calendarId = 1;
+  string eventId = 2;
+  CalEvent event = 3;
+}
+
+message DeleteEventReq {
+  string calendarId = 1;
+  string eventId = 2;
+}
+
+message DeleteEventRes {}

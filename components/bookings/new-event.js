@@ -1,25 +1,46 @@
 import Flatpickr from "react-flatpickr";
 import "flatpickr/dist/themes/light.css";
+import {CreateEvent} from "../../clients/cal-management/service.pb.js"
 import Link from "next/link";
+import { client } from "twirpscript";
 import { useRouter } from "next/router";
+import { v4 as uuidv4 } from "uuid";
+import { now } from "next-auth/client/_utils";
+import urls from "../../clients/client-urls.json";
 
-export default function NewEvent() {
+export default function NewEvent(props) {
 
     // TODO fill in API calls
     const registerEvent = async event => {
         event.preventDefault()
 
-        // const res = await fetch('/api/register', {
-        //     body: JSON.stringify({
-        //         name: event.target.name.value
-        //     }),
-        //     headers: {
-        //         'Content-Type': 'application/json'
-        //     },
-        //     method: 'POST'
-        // })
+        client.baseURL = urls.calendar_management;
+        // client.baseURL ="http://localhost:8080"
 
-        // const result = await res.json()
+        var t = Date.parse(event.target.date.value)
+        console.log(t)
+
+        const e = {
+            summary: "1:1 with " + event.target.name.value ,
+            location: "virtual",
+            Start: Math.floor(t/1000),
+            end: Math.floor(t/1000+event.target.length.value*60),
+            recurrence: [],
+            attendees: [],
+        }
+
+        const uId = uuidv4().replaceAll('-', '')
+
+        const req = {
+            calendarId: uId,
+            eventId: uId,
+            event: e,
+            ownerOfEvent: props.email, // TODO: where to I get emails
+        }
+
+        console.log("Request, ", req)
+        const res = await CreateEvent(req)
+
 
         // These are the values we get when we hit the Create Event button!
         console.log("event.target.name.value: " + event.target.name.value)

@@ -1,10 +1,17 @@
-import { useSession } from 'next-auth/react'
+import {signIn, useSession} from 'next-auth/react'
+import { useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
 import Layout from '../components/layout'
 
 export default function Home() {
   const { data: session } = useSession()
+
+  useEffect(() => {
+    if (session?.error === 'RefreshAccessTokenError') {
+      signIn() // Force sign in to hopefully resolve error
+    }
+  }, [session])
   return (
     <Layout>
       <div className="flex flex-col items-center justify-center min-h-screen py-2">
@@ -15,7 +22,7 @@ export default function Home() {
 
         <main className="flex flex-col items-center justify-center w-full flex-1 px-20 text-center">
           <h1 className="text-6xl font-bold">
-            Welcome to OpenCal
+            Welcome to OpenCal - Session - {session && <pre>{JSON.stringify(session, null, 2)}</pre>}
           </h1>
         </main>
 

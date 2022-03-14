@@ -6,6 +6,9 @@ import Link from 'next/link'
 import { DateTime, Interval, Duration } from 'luxon'
 import { useRouter } from 'next/router'
 import AccessDenied from '../access-denied'
+import { client } from "twirpscript";
+import {GetTeam, GetUser} from "../../clients/identity/service.pb.js"
+import urls from "../../clients/client-urls.json";
 
 function classNames(...classes) {
   return classes.filter(Boolean).join(' ')
@@ -13,15 +16,34 @@ function classNames(...classes) {
 
 export default function CalendarWeekView(props) {
 // TODO: define return value however you want.
-function getUserCalendarEvents() {
+async function getUserCalendarEvents(userEmail) {
   console.log("get User CalendarEvents was called")
-  // TODO: fill in API calls here by Mark
+  userEmail = userEmail.replace("%40", "@") // sanitize the converted @ sign
+  // client.baseURL = "http://localhost:8080";
+  client.baseURL = urls.identity;
+  let teamInfo = GetUser({
+      email: userEmail,
+      username: userEmail,
+  }).then(async (res) => {
+      // use the result here
+      console.log(res)
+  })
 }
 
 // TODO: define return value however you want.
-function getTeamCalendarEvents() {
+async function getTeamCalendarEvents(teamID) {
   console.log("get Team CalendarEvents was called")
   // TODO: fill in API calls here by Mark
+  teamID = teamID.replace("%40", "@") //not sure if we need this here tbh
+  // API call here
+  // client.baseURL = "http://localhost:8080";
+  client.baseURL = urls.identity;
+  let teamInfo = GetTeam({
+      teamID: teamID,
+  }).then(async (res) => {
+      // use the result here
+      console.log(res)
+  })
 }
 
   const container = useRef(null)
@@ -44,6 +66,7 @@ function getTeamCalendarEvents() {
   const [weekDates, setWeekDates] = useState(data.dates)
   const [month, setMonth] = useState(data.currentMonth)
   const [year, setYear] = useState(data.currentYear)
+  const [calendarEvents, setCalendarEvents] = useState([])
 
   function updateWeekOnClick(input){
     if (input === ">"){
@@ -91,12 +114,16 @@ function getTeamCalendarEvents() {
   //Router nonsense:
   const router = useRouter()
   const { bookingsType, bookings } = router.query // bookingsType can be "user" or "teamCalendar". // bookings will be your user email or team ID
-  let calendarEvents; // TODO: Mark define this however you want.
-  if (bookingsType == "user") {
-    calendarEvents = getUserCalendarEvents();
-  } else if (bookingsType == "teamCalendar") {
-    calendarEvents = getTeamCalendarEvents();
-  } else {
+
+  useEffect(() => {
+    if (bookingsType == "user") {
+      getUserCalendarEvents(bookings);
+    } else if (bookingsType == "teamCalendar") {
+      getTeamCalendarEvents(bookings);
+    }
+  }, [router])
+  //useffect has to be above this or vercel will probably freak out
+  if((bookingsType !== "user") && (bookingsType !== "teamCalendar")){
     return (<AccessDenied></AccessDenied>);
   }
 

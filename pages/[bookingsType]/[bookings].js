@@ -5,8 +5,11 @@ import UserDetails from '../../components/bookings/user-details'
 import NewEvent from '../../components/bookings/new-event'
 import { useRouter } from 'next/router'
 import TeamDetails from '../../components/bookings/team-details'
+import {GetTeam, GetUser} from "../../clients/identity/service.pb.js"
 import Layout from '../../components/layout'
+import { client } from "twirpscript";
 import { DateTime } from 'luxon'
+import urls from "../../clients/client-urls.json"
 
 function Sidebar() {
     const { data: session, status } = useSession()
@@ -14,7 +17,7 @@ function Sidebar() {
     const { bookingsType, bookings, newEvent } = router.query
     // TODO: Check route here and figure out whether to put Team-details or user-details
     if (newEvent) {
-        return (<NewEvent></NewEvent>)
+        return (<NewEvent email={bookings} ></NewEvent>)
     }
     if (bookingsType == "user") {
         if (bookings == session.user.email) {
@@ -41,6 +44,19 @@ function Sidebar() {
 
 // TODO: Do GetUser API call!
 function getUserCalendarEvents(userEmail) {
+    userEmail = userEmail.replace("%40", "@") // sanitize the converted @ sign
+    // client.baseURL = "http://localhost:8080";
+    client.baseURL = urls.identity;
+    let teamInfo = GetUser({
+        email: userEmail,
+        username: userEmail,
+    }).then(async (res) => {
+        // use the result here
+        console.log(res)
+    })
+        
+
+
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -49,16 +65,28 @@ function getUserCalendarEvents(userEmail) {
     )
 }
 
-// TODO: Do GetUser API call!
+// TODO: Do GetTeam API call!
 function getTeamCalendarEvents(teamID) {
-
+    teamID = teamID.replace("%40", "@") //not sure if we need this here tbh
     // API call here
+    // client.baseURL = "http://localhost:8080";
+    client.baseURL = urls.identity;
+    let teamInfo = GetTeam({
+        teamID: teamID,
+    }).then(async (res) => {
+        // use the result here
+        console.log(res)
+    })
+        
+
+
 
     // return (
     //     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     //         <TeamDetails team={teamID}></TeamDetails>
     //     </div>
     // )
+
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
