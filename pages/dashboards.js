@@ -91,7 +91,7 @@ export default function Dashboards(props) {
                                                             if(member !== email){
                                                                 let path = "/user/"+ member
                                                                 return (
-                                                                    <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+                                                                    <div key={member} className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
                                                                         <Link href={path}>
                                                                             <button
                                                                                 type="button"
@@ -112,7 +112,7 @@ export default function Dashboards(props) {
                                                         {teams.map((team) => {
                                                             let path = "/teamCalendar/"+ team.teamID
                                                             return (
-                                                                <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+                                                                <div key={team.teamID} className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
                                                                     <Link href={path}>
                                                                         <button
                                                                             type="button"
