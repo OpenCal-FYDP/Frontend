@@ -18,6 +18,7 @@ function classNames(...classes) {
 
 export default function CalendarWeekView(props) {
 
+console.log(props.calendarEvents);
 function sortDates(dates){
   let datesTmp = [];
   dates.forEach(date => {
@@ -136,8 +137,8 @@ async function getUserAvailability(userEmail){
   const [weekDates, setWeekDates] = useState(data.dates)
   const [month, setMonth] = useState(data.currentMonth)
   const [year, setYear] = useState(data.currentYear)
-  const [calendarEvents, setCalendarEvents] = useState([])
-  const [availabilities, setAvailabilities] = useState([])
+  const [calendarEvents, setCalendarEvents] = useState(props.calendarEvents)
+  const [availabilities, setAvailabilities] = useState(props.availabilities)
 
   function updateWeekOnClick(input){
     if (input === ">"){
@@ -185,15 +186,15 @@ async function getUserAvailability(userEmail){
   //Router nonsense:
   const router = useRouter()
   const { bookingsType, bookings } = router.query // bookingsType can be "user" or "teamCalendar". // bookings will be your user email or team ID
-
-  useEffect(() => {
-    if (bookingsType == "user") {
-      getUserGcalEvents(bookings);
-      getUserAvailability(bookings);
-    } else if (bookingsType == "teamCalendar") {
-      getTeamGcalEvents(bookings);
-    }
-  }, [router])
+  /*if (bookingsType == "user") {
+    getUserGcalEvents(bookings);
+    getUserAvailability(bookings);
+  } else if (bookingsType == "teamCalendar") {
+    getTeamGcalEvents(bookings);
+  }*/
+  /*useEffect(() => {
+    
+  }, [])*/
   //useffect has to be above this or vercel will probably freak out
   if((bookingsType !== "user") && (bookingsType !== "teamCalendar")){
     return (<AccessDenied></AccessDenied>);
@@ -648,7 +649,7 @@ async function getUserAvailability(userEmail){
                     2 gives a position of 12am, so y position comes from 2 + # of half hours past 12am * 6, if there's a better way to do this please tell me
                     col-start-3 is for wednesday meetings, the number refers to the day of the week, 2 is tuesday, 4 is thursday, etc.
                 */}
-                {availabilities.map((avail, index) => {
+                {props.availabilities.map((avail, index) => {
                   //console.log(index);
                   if(index % 2 === 0){
                     //start time
@@ -662,9 +663,9 @@ async function getUserAvailability(userEmail){
                     return (
                       <li className={className} style={gridRow}>
                         <a
-                          className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-gray-50 p-2 text-xs leading-5 hover:bg-gray-100"
+                          className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-gray-200 p-2 text-xs leading-5 hover:bg-gray-300"
                         >
-                          <p className="text-gray-500 group-hover:text-gray-700">
+                          <p className="text-gray-500 group-hover:text-gray-900">
                             <time dateTime="2022-01-12T06:00">{availDate.toLocaleString(DateTime.TIME_SIMPLE)}</time>
                           </p>
                         </a>
@@ -689,9 +690,9 @@ async function getUserAvailability(userEmail){
                     return (
                       <li className={className} style={gridRow}>
                         <a
-                          className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-gray-50 p-2 text-xs leading-5 hover:bg-gray-100"
+                          className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-gray-200 p-2 text-xs leading-5 hover:bg-gray-300"
                         >
-                          <p className="text-gray-500 group-hover:text-gray-700">
+                          <p className="text-gray-500 group-hover:text-gray-900">
                             <time dateTime="2022-01-12T06:00">{availDate.toLocaleString(DateTime.TIME_SIMPLE)}</time>
                           </p>
                         </a>
@@ -699,13 +700,14 @@ async function getUserAvailability(userEmail){
                     );
                   }
                 })}
-                {calendarEvents.map((event, index) => {
-                  if(event[0].weekNumber === week && event[0].year === year){
-                    let duration = event[1].diff(event[0], ['minutes']);
-                    let eventDay = event[0].weekday;
+                {props.calendarEvents.map((event, index) => {
+                  let eventDateTime = [DateTime.fromSeconds(event[0]), DateTime.fromSeconds(event[1])]
+                  if(eventDateTime[0].weekNumber === week && eventDateTime[0].year === year){
+                    let duration = eventDateTime[1].diff(eventDateTime[0], ['minutes']);
+                    let eventDay = eventDateTime[0].weekday;
                     let className = "relative mt-px flex col-start-" + eventDay; //this will put the event in the correct column corresponding to its day
-                    let hour = event[0].hour;
-                    let minutes = event[0].minute;
+                    let hour = eventDateTime[0].hour;
+                    let minutes = eventDateTime[0].minute;
                     let start = 2 + 6*2*hour;
                     if(minutes > 0){
                       start = start + Math.round(minutes/5);
@@ -714,20 +716,31 @@ async function getUserAvailability(userEmail){
                     let dur = Math.round(duration.minutes/5);
                     //console.log(dur);
                     let gridRow = {gridRow: start + ' / span ' + dur};
-                    return (
-                      <li className={className} style={gridRow}>
-                        {/*<Link href="../calendar-events/[eventId]" as={eventPath}>*/}
-                        <a
-                          className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-blue-50 p-2 text-xs leading-5 hover:bg-blue-100"
-                        >
-                          {/*<p className="order-1 font-semibold text-blue-700">{event.event}</p>*/}
-                          <p className="text-blue-500 group-hover:text-blue-700">
-                            <time dateTime="2022-01-12T06:00">{event[0].toLocaleString(DateTime.TIME_SIMPLE)}</time>
-                          </p>
-                        </a>
-                        {/*</Link>*/}
-                      </li>
-                    );
+                    if((bookings.replace("%40", "@") !== props.user.email) && (bookingsType === "user")){
+                      return (
+                        <li className={className} style={gridRow}>
+                          <a
+                            className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-gray-200 p-2 text-xs leading-5 hover:bg-gray-300"
+                          >
+                            <p className="text-gray-500 group-hover:text-gray-900">
+                              <time dateTime="2022-01-12T06:00">{eventDateTime[0].toLocaleString(DateTime.TIME_SIMPLE)}</time>
+                            </p>
+                          </a>
+                        </li>
+                      );
+                    } else{
+                      return (
+                        <li className={className} style={gridRow}>
+                          <a
+                            className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-blue-50 p-2 text-xs leading-5 hover:bg-blue-100"
+                          >
+                            <p className="text-blue-500 group-hover:text-blue-700">
+                              <time dateTime="2022-01-12T06:00">{eventDateTime[0].toLocaleString(DateTime.TIME_SIMPLE)}</time>
+                            </p>
+                          </a>
+                        </li>
+                      );
+                    }
                   }
                 })}
                 {events.map((event, index) => {

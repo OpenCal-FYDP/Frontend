@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/router'
 import { Switch } from '@headlessui/react'
 import { BellIcon } from '@heroicons/react/outline'
 import { SearchIcon } from '@heroicons/react/solid'
@@ -27,6 +28,7 @@ export default function Dashboards(props) {
     const [teamMembers, setTeamMembers] = useState([])
     const [teams, setTeams] = useState([])
     
+    const router = useRouter()
     const { data: session, status } = useSession()
     const email = session? session.user.email: "";
     const loading = status === 'loading'
@@ -46,7 +48,7 @@ export default function Dashboards(props) {
     }
     useEffect(() => {
         initialAPICalls(email);
-    }, [session, setTeams, setTeamMembers]);
+    }, [session, router, setTeams, setTeamMembers]);
     // When rendering client side don't display anything until loading is complete
     if (typeof window !== 'undefined' && loading) return null
 
