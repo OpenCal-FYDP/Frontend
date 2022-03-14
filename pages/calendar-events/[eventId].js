@@ -12,8 +12,8 @@ export default function event() {
     let session = useSession()
 
     // TODO fill in API calls
-    const rescheduleEvent = async event => {
-        event.preventDefault()
+    const rescheduleEvent = async Event => {
+        Event.preventDefault()
 
         // const res = await fetch('/api/register', {
         //     body: JSON.stringify({
@@ -28,9 +28,9 @@ export default function event() {
         // const result = await res.json()
 
         // These are the values we get when we hit the Create Event button!
-        console.log("event.target.name.value: " + event.target.name.value)
-        console.log("event.target.date.value: " + event.target.date.value)
-        console.log("event.target.length.value: " + event.target.length.value)
+        console.log("event.target.name.value: " + Event.target.name.value)
+        console.log("event.target.date.value: " + Event.target.date.value)
+        console.log("event.target.length.value: " + Event.target.length.value)
     }
 
     async function getAvailabilities(email){
