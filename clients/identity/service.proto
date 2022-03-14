@@ -19,19 +19,20 @@ message GetUserRes {
   string email = 1;
   string username = 2;
   string teamID = 3;
+  bytes oathToken = 4; // json byte serialization of oauthToken
 }
 
 message UpdateUserReq {
   string email = 1;
   string username = 2;
   string teamID = 3;
+  bytes oathToken = 4; // json byte serialization of oauthToken
 }
 
 message UpdateUserRes {}
 
 message GetTeamReq {
   string teamID = 1;
-  string teamName = 2;
 }
 message GetTeamRes {
   string teamID = 1;
