@@ -27,11 +27,11 @@ function Sidebar() {
                 </div>
             )
         } else {
-            return getUser(bookings)
+            return GetUserDetails(bookings)
         }
     } else if (bookingsType == "teamCalendar") {
         return (
-            getTeam(bookings)
+            GetTeamDetails(bookings)
         )
     } else {
         return (
@@ -42,7 +42,7 @@ function Sidebar() {
     }
 }
 
-function getUser(userEmail) {
+function GetUserDetails(userEmail) {
     if (!userEmail || userEmail == "self") {
         return (
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -79,7 +79,7 @@ function getUser(userEmail) {
 }
 
 // TODO: Do GetTeam API call!
-function getTeam(teamID) {
+function GetTeamDetails(teamID) {
     if (!teamID) {
         return (
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
