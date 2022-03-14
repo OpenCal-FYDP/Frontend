@@ -10,20 +10,20 @@ import urls from "../../clients/client-urls.json";
 
 export default function NewEvent(props) {
 
-    const registerEvent = async event => {
-        event.preventDefault()
+    const registerEvent = async Event => {
+        Event.preventDefault()
 
         client.baseURL = urls.calendar_management;
         // client.baseURL ="http://localhost:8080"
 
-        var t = Date.parse(event.target.date.value)
+        var t = Date.parse(Event.target.date.value)
         console.log(t)
 
         const e = {
-            summary: "1:1 with " + event.target.name.value ,
+            summary: "1:1 with " + Event.target.name.value ,
             location: "virtual",
             Start: Math.floor(t/1000),
-            end: Math.floor(t/1000+event.target.length.value*60),
+            end: Math.floor(t/1000+Event.target.length.value*60),
             recurrence: [],
             attendees: [],
         }
@@ -42,9 +42,9 @@ export default function NewEvent(props) {
 
 
         // These are the values we get when we hit the Create Event button!
-        console.log("event.target.name.value: " + event.target.name.value)
-        console.log("event.target.date.value: " + event.target.date.value)
-        console.log("event.target.length.value: " + event.target.length.value)
+        console.log("event.target.name.value: " + Event.target.name.value)
+        console.log("event.target.date.value: " + Event.target.date.value)
+        console.log("event.target.length.value: " + Event.target.length.value)
     }
 
     return (
