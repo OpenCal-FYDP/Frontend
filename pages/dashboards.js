@@ -22,35 +22,31 @@ function classNames(...classes) {
     return classes.filter(Boolean).join(' ')
 }
 
-export default function Preferences(props) {
+export default function Dashboards(props) {
 
-    const [teamMembers, setTeamMembers] = useState(props.team.teamMembers)
-    const [teams, setTeams] = useState([{teamName: props.team.teamName, teamID: props.teamID}])
+    const [teamMembers, setTeamMembers] = useState([])
+    const [teams, setTeams] = useState([])
     
     const { data: session, status } = useSession()
     const email = session? session.user.email: "";
     const loading = status === 'loading'
     
-    /*async function initialAPICalls(email){
+    async function initialAPICalls(email){
         client.baseURL = urls.identity;
-        await GetUser({
+        const user = await GetUser({
             email: email,
             username: email
-        }).then(async (res) => {
-            if(res){
-                const team = await GetTeam({teamID: res.teamID}, () => {console.log("got team")}, () => {console.log("couldn't get team")});
-                if(team){
-                    setTeams([{teamName: team.teamName, teamID: res.teamID}]);
-                    setTeamMembers(team.teamMembers);
-                }
-            }
-        }, () => {
-            console.log("error in GetUser")
         });
-    }*/
-    /*useEffect(() => {
+        console.log(user)
+        const team = await GetTeam({teamID: user.teamID}, () => {console.log("got team")}, () => {console.log("couldn't get team")});
+        if(team){
+            setTeams([{teamName: team.teamName, teamID: user.teamID}]);
+            setTeamMembers(team.teamMembers);
+        }
+    }
+    useEffect(() => {
         initialAPICalls(email);
-    }, [session, setTeams, setTeamMembers]);*/
+    }, [session, setTeams, setTeamMembers]);
     // When rendering client side don't display anything until loading is complete
     if (typeof window !== 'undefined' && loading) return null
 
@@ -146,25 +142,25 @@ export default function Preferences(props) {
 export async function getServerSideProps(context){
     const session = await getSession(context);
     client.baseURL = urls.identity;
-    let teamID;
+    /*let teamID;
     let team;
-    await GetUser({
-        email: session.user.email,
-        username: session.user.email
-    }).then(async (res) => {
-        if(res){
-            teamID = res.teamID;
-            team = await GetTeam({teamID: res.teamID}, () => {console.log("got team")}, () => {console.log("couldn't get team")});
-
-        }
-    }, () => {
-        console.log("error in GetUser")
-    });
+    if(session){
+        await GetUser({
+            email: session.user.email,
+            username: session.user.email
+        }).then(async (res) => {
+            if(res){
+                teamID = res.teamID;
+                team = await GetTeam({teamID: res.teamID}, () => {console.log("got team")}, () => {console.log("couldn't get team")});
+    
+            }
+        }, () => {
+            console.log("error in GetUser")
+        });
+    }*/
     return {
         props: {
-          session: session,
-          teamID: teamID,
-          team: team
+          session: session
         }
     }
 }

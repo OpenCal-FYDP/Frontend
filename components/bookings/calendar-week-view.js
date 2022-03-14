@@ -58,6 +58,7 @@ async function getTeamGcalEvents(teamID){
   GetTeamssGcalEvents({
     teamID: teamID
   }).then((res) => {
+    console.log(res);
     let events = [];
     res.eventIntervals.map((eventInterval) => {
       events.push(eventInterval.split("-"));
