@@ -9,6 +9,7 @@ import AccessDenied from '../access-denied'
 import { client } from "twirpscript";
 import {GetTeam, GetUser} from "../../clients/identity/service.pb.js"
 import {GetUserProfile, SetUserProfile, SetAvailability, GetAvailability} from "../../clients/preference-management/service.pb.js";
+import {GetUsersGcalEvents, GetTeamssGcalEvents} from "../../clients/cal-management/service.pb.js";
 import urls from "../../clients/client-urls.json";
 
 function classNames(...classes) {
@@ -33,6 +34,43 @@ function sortDates(dates){
   return datesTmpStr;
 }
 
+async function getUserGcalEvents(userEmail){
+  client.baseURL = urls.calendar_management;
+  GetUsersGcalEvents({
+    username: userEmail,
+    email: userEmail
+  }).then((res) => {
+    let events = [];
+    res.eventIntervals.map((eventInterval) => {
+      events.push(eventInterval.split("-"));
+    });
+    for(let i = 0; i < events.length; i++){
+      events[i][0] = DateTime.fromSeconds(Number(events[i][0])); //convert to numbers so that DateTime.FromSeconds can be called on them
+      events[i][1] = DateTime.fromSeconds(Number(events[i][1]));
+    }
+    //console.log(events);
+    setCalendarEvents(events);
+  })
+}
+
+async function getTeamGcalEvents(teamID){
+  client.baseURL = urls.calendar_management;
+  GetTeamssGcalEvents({
+    teamID: teamID
+  }).then((res) => {
+    let events = [];
+    res.eventIntervals.map((eventInterval) => {
+      events.push(eventInterval.split("-"));
+    });
+    for(let i = 0; i < events.length; i++){
+      events[i][0] = DateTime.fromSeconds(Number(events[i][0])); //convert to numbers so that DateTime.FromSeconds can be called on them
+      events[i][1] = DateTime.fromSeconds(Number(events[i][1]));
+    }
+    //console.log(events);
+    setCalendarEvents(events);
+  })
+}
+
 // TODO: define return value however you want.
 async function getUserCalendarEvents(userEmail) {
   console.log("get User CalendarEvents was called")
@@ -44,7 +82,7 @@ async function getUserCalendarEvents(userEmail) {
       username: userEmail,
   }).then(async (res) => {
       // use the result here
-      console.log(res)
+      //console.log(res);
   })
 }
 
@@ -75,7 +113,7 @@ async function getUserAvailability(userEmail){
     sortedAvail.pop(); //we want 2 availabilities per day, a start time and an end time
   }
   setAvailabilities(sortedAvail);
-  console.log(sortedAvail)
+  //console.log(sortedAvail)
 }
 
   const container = useRef(null)
@@ -149,10 +187,10 @@ async function getUserAvailability(userEmail){
 
   useEffect(() => {
     if (bookingsType == "user") {
-      getUserCalendarEvents(bookings);
+      getUserGcalEvents(bookings);
       getUserAvailability(bookings);
     } else if (bookingsType == "teamCalendar") {
-      getTeamCalendarEvents(bookings);
+      getTeamGcalEvents(bookings);
     }
   }, [router])
   //useffect has to be above this or vercel will probably freak out
@@ -610,7 +648,7 @@ async function getUserAvailability(userEmail){
                     col-start-3 is for wednesday meetings, the number refers to the day of the week, 2 is tuesday, 4 is thursday, etc.
                 */}
                 {availabilities.map((avail, index) => {
-                  console.log(index);
+                  //console.log(index);
                   if(index % 2 === 0){
                     //start time
                     let availDate = DateTime.fromSeconds(Number(avail));
@@ -656,6 +694,37 @@ async function getUserAvailability(userEmail){
                             <time dateTime="2022-01-12T06:00">{availDate.toLocaleString(DateTime.TIME_SIMPLE)}</time>
                           </p>
                         </a>
+                      </li>
+                    );
+                  }
+                })}
+                {calendarEvents.map((event, index) => {
+                  if(event[0].weekNumber === week && event[0].year === year){
+                    let duration = event[1].diff(event[0], ['minutes']);
+                    let eventDay = event[0].weekday;
+                    let className = "relative mt-px flex col-start-" + eventDay; //this will put the event in the correct column corresponding to its day
+                    let hour = event[0].hour;
+                    let minutes = event[0].minute;
+                    let start = 2 + 6*2*hour;
+                    if(minutes > 0){
+                      start = start + Math.round(minutes/5);
+                    }
+                    //console.log(duration.minutes);
+                    let dur = Math.round(duration.minutes/5);
+                    //console.log(dur);
+                    let gridRow = {gridRow: start + ' / span ' + dur};
+                    return (
+                      <li className={className} style={gridRow}>
+                        {/*<Link href="../calendar-events/[eventId]" as={eventPath}>*/}
+                        <a
+                          className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-blue-50 p-2 text-xs leading-5 hover:bg-blue-100"
+                        >
+                          {/*<p className="order-1 font-semibold text-blue-700">{event.event}</p>*/}
+                          <p className="text-blue-500 group-hover:text-blue-700">
+                            <time dateTime="2022-01-12T06:00">{event[0].toLocaleString(DateTime.TIME_SIMPLE)}</time>
+                          </p>
+                        </a>
+                        {/*</Link>*/}
                       </li>
                     );
                   }

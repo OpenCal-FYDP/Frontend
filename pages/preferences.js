@@ -244,7 +244,7 @@ export default function Preferences(props) {
     }
     useEffect(() => {
         initialAPICalls(email);
-    }, [session]);
+    }, [session, setAvailabilities, setUserFromIdentity, setAvailToDay, setTeams]);
     // When rendering client side don't display anything until loading is complete
     if (typeof window !== 'undefined' && loading) return null
 

@@ -24,14 +24,14 @@ function classNames(...classes) {
 
 export default function Preferences(props) {
 
-    const [teamMembers, setTeamMembers] = useState([])
-    const [teams, setTeams] = useState([])
+    const [teamMembers, setTeamMembers] = useState(props.team.teamMembers)
+    const [teams, setTeams] = useState([{teamName: props.team.teamName, teamID: props.teamID}])
     
     const { data: session, status } = useSession()
     const email = session? session.user.email: "";
     const loading = status === 'loading'
     
-    async function initialAPICalls(email){
+    /*async function initialAPICalls(email){
         client.baseURL = urls.identity;
         await GetUser({
             email: email,
@@ -47,10 +47,10 @@ export default function Preferences(props) {
         }, () => {
             console.log("error in GetUser")
         });
-    }
-    useEffect(() => {
+    }*/
+    /*useEffect(() => {
         initialAPICalls(email);
-    }, [session]);
+    }, [session, setTeams, setTeamMembers]);*/
     // When rendering client side don't display anything until loading is complete
     if (typeof window !== 'undefined' && loading) return null
 
@@ -89,7 +89,7 @@ export default function Preferences(props) {
                                                     </dl>
                                                 </div>
                                                 <div className="mt-6">
-                                                    <h2 className="text-xl leading-6 font-bold text-gray-900">Team Members' Calendars</h2>
+                                                    <h2 className="text-xl leading-6 font-bold text-gray-900">Team Members Calendars</h2>
                                                     <dl className="divide-y divide-gray-200">
                                                         {teamMembers.map((member) => {
                                                             if(member !== email){
@@ -101,7 +101,7 @@ export default function Preferences(props) {
                                                                                 type="button"
                                                                                 className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                                                             >
-                                                                                {member}'s dashboard
+                                                                                {member}s dashboard
                                                                             </button>
                                                                         </Link>
                                                                     </div>
@@ -122,7 +122,7 @@ export default function Preferences(props) {
                                                                             type="button"
                                                                             className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                                                         >
-                                                                            {team.teamName}'s dashboard
+                                                                            {team.teamName} dashboard
                                                                         </button>
                                                                     </Link>
                                                                 </div>
@@ -145,9 +145,26 @@ export default function Preferences(props) {
 
 export async function getServerSideProps(context){
     const session = await getSession(context);
+    client.baseURL = urls.identity;
+    let teamID;
+    let team;
+    await GetUser({
+        email: session.user.email,
+        username: session.user.email
+    }).then(async (res) => {
+        if(res){
+            teamID = res.teamID;
+            team = await GetTeam({teamID: res.teamID}, () => {console.log("got team")}, () => {console.log("couldn't get team")});
+
+        }
+    }, () => {
+        console.log("error in GetUser")
+    });
     return {
         props: {
-          session: session
+          session: session,
+          teamID: teamID,
+          team: team
         }
     }
 }

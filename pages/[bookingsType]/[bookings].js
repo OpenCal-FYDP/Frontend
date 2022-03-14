@@ -37,7 +37,7 @@ function Sidebar(props) {
     } else if (bookingsType == "teamCalendar") {
         return (
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <UserDetails user={props.user} team={props.team}></UserDetails>
+                <UserDetails team={props.team} user={props.user}></UserDetails>
             </div>
         )
     } else {
@@ -158,7 +158,7 @@ export default function Page() {
                         <aside className="hidden lg:block lg:flex-shrink-0 lg:order-first">
                             <div className="h-full relative flex flex-col w-96 border-r border-gray-200 bg-white overflow-y-auto">
                                 {/* Your content */}
-                                <Sidebar user={user} team={team}></Sidebar>
+                                <Sidebar team={team} user={user}></Sidebar>
                             </div>
                         </aside>
                     </main>
