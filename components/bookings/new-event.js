@@ -38,6 +38,7 @@ export default function NewEvent(props) {
             ownerOfEvent: props.email, // TODO: where to I get emails
         }
 
+        console.log("Request, ", req)
         const res = await CreateEvent(req)
 
 

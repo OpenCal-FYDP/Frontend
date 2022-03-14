@@ -11,6 +11,8 @@ You need to create a `.env.local` file in your root of this project.
 Inside if you want to use my development Github OAuth `OpenCAL-dev-wrwalker`
 You should insert the following:
 ```
+GOOGLE_ID=707155551889-5fq7p2oe1jn9bacdlkarnolmipbmelk9.apps.googleusercontent.com
+GOOGLE_SECRET=GOCSPX...
 GITHUB_ID=bf46f2d5367b3ef7e1de
 GITHUB_SECRET=56f1...
 NEXTAUTH_URL=http://localhost:3000
