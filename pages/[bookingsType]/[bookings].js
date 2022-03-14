@@ -12,43 +12,6 @@ import urls from "../../clients/client-urls.json"
 import { useEffect, useState } from 'react'
 
 function Sidebar() {
-
-    const getUser = (userEmail) => {
-        if (!userEmail || userEmail == "self") {
-            return (
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <UserDetails email={"Loading..."} username={""}></UserDetails>
-                </div>
-            )
-        } 
-        userEmail = userEmail.replace("%40", "@") // sanitize the converted @ sign
-        client.baseURL = urls.identity;
-    
-        const [user, setUser] = useState(null)
-        const [isLoading, setLoading] = useState(false)
-        useEffect(async () => {
-            setLoading(true)
-            await GetUser({
-                email: userEmail,
-                username: userEmail,
-            }).then((res) => {
-                // use the result here
-                setLoading(false)
-                setUser(res)
-                console.log("RESULT: " + res)
-            })
-        }, [userEmail])
-    
-        if (!user) return <p>No profile data</p>
-    
-    
-        return (
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <UserDetails email={user ? user.email : "No such user " + userEmail} username={user ? user.username : ""}></UserDetails>
-            </div>
-        )
-    }
-
     const { data: session, status } = useSession()
     const router = useRouter()
     const { bookingsType, bookings, newEvent } = router.query
@@ -79,32 +42,77 @@ function Sidebar() {
     }
 }
 
-// TODO: Do GetTeam API call!
-function getTeam(teamID) {
-    teamID = teamID.replace("%40", "@") //not sure if we need this here tbh
-    // API call here
-    // client.baseURL = "http://localhost:8080";
+function getUser(userEmail) {
+    if (!userEmail || userEmail == "self") {
+        return (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <UserDetails email={"Loading..."} username={""}></UserDetails>
+            </div>
+        )
+    }
+    userEmail = userEmail.replace("%40", "@") // sanitize the converted @ sign
     client.baseURL = urls.identity;
-    let teamInfo = GetTeam({
-        teamID: teamID,
-    }).then(async (res) => {
-        // use the result here
-        console.log(res)
-    })
 
+    const [user, setUser] = useState(null)
+    const [isLoading, setLoading] = useState(false)
+    useEffect(async () => {
+        setLoading(true)
+        await GetUser({
+            email: userEmail,
+            username: userEmail,
+        }).then((res) => {
+            // use the result here
+            setLoading(false)
+            setUser(res)
+            console.log("RESULT: " + res)
+        })
+    }, [userEmail])
 
-
-
-    // return (
-    //     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    //         <TeamDetails team={teamID}></TeamDetails>
-    //     </div>
-    // )
+    if (!user) return <p>No data for user "{userEmail}"</p>
 
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <p>No such team {teamID}</p>
+            <UserDetails email={user ? user.email : "No such user " + userEmail} username={user ? user.username : ""}></UserDetails>
+        </div>
+    )
+}
+
+// TODO: Do GetTeam API call!
+function getTeam(teamID) {
+    if (!teamID) {
+        return (
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <TeamDetails teamname={"Invalid teamID"}></TeamDetails>
+            </div>
+        )
+    }
+    client.baseURL = urls.identity;
+
+    const [team, setTeam] = useState(null)
+    const [isLoading, setLoading] = useState(false)
+    useEffect(async () => {
+        setLoading(true)
+        await GetTeam({
+            teamID: teamID,
+        }).then((res) => {
+            // use the result here
+            setLoading(false)
+            setTeam(res)
+            console.log("RESULT: " + res)
+        })
+    }, [teamID])
+
+    if (!team) return <p>No team data for "{teamID}"</p>
+
+
+    return (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <TeamDetails
+                teamName={team ? team.teamName : "No such team " + teamID}
+                teamID={team ? team.teamID : ""}
+                teamMembers={team ? "Team Members: (" + team.teamMembers.join(", ") + ")" : ""}
+            ></TeamDetails>
         </div>
     )
 }
