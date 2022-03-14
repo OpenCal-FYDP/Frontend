@@ -9,7 +9,7 @@ import { client } from "twirpscript";
 import {GetTeam, GetUser, UpdateUser, UpdateTeam} from "../../clients/identity/service.pb.js"
 import urls from "../../clients/client-urls.json";
 
-export default function team(){
+export default function Team(){
     const router = useRouter();
     const teamData = { teamID: router.query.teamID, teamName: "", teamMembers: [] }; //need to set this up to be populated from GetTeam API
     const { data: session, status } = useSession();
