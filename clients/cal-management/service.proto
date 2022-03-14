@@ -12,6 +12,13 @@ service CalendarEventManagementService {
 
   // get event
   rpc GetEvent(GetEventReq) returns (GetEventRes);
+
+  // get get a user's GCalEvents
+  rpc GetUsersGcalEvents(GetUsersGcalEventsReq) returns (GetUsersGcalEventsRes);
+
+  // get get a teams's  user's GCalEvents
+  rpc GetTeamssGcalEvents(GetTeamsGcalEventsReq) returns (GetTeamsGcalEventsRes);
+
 }
 
 // implemented to google’s spec https://developers.google.com/calendar/api/guides/create-events
@@ -67,4 +74,21 @@ message GetEventReq {
 
 message GetEventRes {
   CalEvent event = 1;
+}
+
+message GetUsersGcalEventsReq {
+  string email = 1;
+  string username = 2;
+}
+
+message GetUsersGcalEventsRes {
+  repeated string eventIntervals = 1; //in the form ${startEpochTime}-${endEpochTime}
+}
+
+message GetTeamsGcalEventsReq {
+  string teamID = 1;
+}
+
+message GetTeamsGcalEventsRes {
+  repeated string eventIntervals = 1; //in the form ${startEpochTime}-${endEpochTime}
 }

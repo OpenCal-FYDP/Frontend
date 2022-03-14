@@ -2,7 +2,7 @@ import { useSession } from "next-auth/react"
 import Link from 'next/link'
 
 const navigation = [
-  { name: 'Dashboard', href: '/user/self' },
+  { name: 'Dashboard', href: '/dashboards' },
   { name: 'Preferences', href: '/preferences' },
 ]
 

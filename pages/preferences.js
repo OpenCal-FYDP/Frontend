@@ -169,6 +169,22 @@ export default function Preferences(props) {
         setAvailToDay(availToDayUpdated);
     }
     
+    function sortDates(dates){
+        let datesTmp = [];
+        dates.forEach(date => {
+            datesTmp.push(Number(date));
+        })
+        datesTmp.sort(function(a,b) {
+            //https://stackoverflow.com/questions/1063007/how-to-sort-an-array-of-integers-correctly
+            return a - b;
+        });
+        let datesTmpStr = [];
+        datesTmp.forEach(date => {
+            datesTmpStr.push(date.toString());
+        })
+        return datesTmpStr;
+    }
+
     async function getProfile(){
         client.baseURL = urls.preference_management;
         const profile = await GetUserProfile({
@@ -181,7 +197,7 @@ export default function Preferences(props) {
     async function sendUpdatedAvailToServer(email){
         //console.log(availabilities);
         client.baseURL = urls.preference_management;
-        let sortedAvail = availabilities.sort();
+        let sortedAvail = sortDates(availabilities);
         await SetAvailability({
             email: email,
             timeAvailability: sortedAvail
@@ -192,7 +208,7 @@ export default function Preferences(props) {
         const avail = await GetAvailability({
             email: email
         });
-        const sortedAvail = avail.timeAvailability.sort();
+        const sortedAvail = sortDates(avail.timeAvailability);
         updateAvailToDay(sortedAvail);
         setAvailabilities(sortedAvail);
     }
@@ -205,7 +221,7 @@ export default function Preferences(props) {
         const avail = await GetAvailability({
             email: email
         });
-        const sortedAvail = avail.timeAvailability.sort();
+        const sortedAvail = sortDates(avail.timeAvailability);
         updateAvailToDay(sortedAvail);
         setAvailabilities(sortedAvail);
 
@@ -228,7 +244,7 @@ export default function Preferences(props) {
     }
     useEffect(() => {
         initialAPICalls(email);
-    }, [session]);
+    }, [session, setAvailabilities, setUserFromIdentity, setAvailToDay, setTeams]);
     // When rendering client side don't display anything until loading is complete
     if (typeof window !== 'undefined' && loading) return null
 
