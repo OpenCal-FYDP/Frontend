@@ -411,7 +411,7 @@ export default function Preferences(props) {
                                                         {teams.map((team) => {
                                                             let teamPath = "/team/" + team.teamID; //this should be teamID, will update once I have the GetTeam API built
                                                             return (
-                                                                <div className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
+                                                                <div key={team.teamID} className="py-4 sm:py-5 sm:grid sm:grid-cols-3 sm:gap-4">
                                                                     <dt className="text-sm font-medium text-gray-500"><Link href="team/[teamID]" as={teamPath}><a>{team.teamName}</a></Link></dt>
                                                                     <dd className="mt-1 flex flex-wrap items-center text-sm text-gray-900 sm:mt-0 sm:col-span-2">
                                                                     </dd>

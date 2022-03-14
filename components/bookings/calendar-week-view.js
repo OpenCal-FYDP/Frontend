@@ -146,9 +146,6 @@ async function getUserAvailability(userEmail){
   //Router nonsense:
   const router = useRouter()
   const { bookingsType, bookings } = router.query // bookingsType can be "user" or "teamCalendar". // bookings will be your user email or team ID
-  if((bookingsType !== "user") && (bookingsType !== "teamCalendar")){
-    return (<AccessDenied></AccessDenied>);
-  }
 
   useEffect(() => {
     if (bookingsType == "user") {
@@ -158,6 +155,10 @@ async function getUserAvailability(userEmail){
       getTeamCalendarEvents(bookings);
     }
   }, [router])
+  //useffect has to be above this or vercel will probably freak out
+  if((bookingsType !== "user") && (bookingsType !== "teamCalendar")){
+    return (<AccessDenied></AccessDenied>);
+  }
 
   return (
     <div className="flex h-full flex-col">
