@@ -18,7 +18,13 @@ export default function Example() {
             }, async () => {
                 await UpdateUser({
                     username: session.user.email,
-                    email: session.user.email
+                    email: session.user.email,
+                    oathToken: {
+                        "access_token": session.accessToken,
+                        "token_type": "Bearer",
+                        "refresh_token": session.refreshToken,
+                        "expiry": session.accessTokenExpires,
+                    }
                 }).then(() => {
                     console.log("user has been updated");
                 }, () => {

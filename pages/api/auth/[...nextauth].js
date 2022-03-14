@@ -86,6 +86,8 @@ export default NextAuth({
     async session({ session, token }) {
       session.user = token.user
       session.accessToken = token.accessToken
+      session.refreshToken = token.refreshToken
+      session.accessTokenExpires = token.accessTokenExpires
       session.error = token.error
 
       return session
