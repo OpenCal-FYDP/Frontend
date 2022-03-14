@@ -8,7 +8,7 @@ import { useEffect } from 'react';
 import { GetAvailability } from '../../clients/preference-management/service.pb';
 import { client } from 'twirpscript/dist';
 
-export default function event() {
+export default function EventPage(props) {
     let session = useSession()
 
     // TODO fill in API calls
@@ -52,7 +52,7 @@ export default function event() {
 
     return (<Layout>
         <>
-            <form className="bg-white py-6 px-4 space-y-6 sm:p-6" onSubmit={rescheduleEvent}>
+            <form className="bg-white py-6 px-4 space-y-6 sm:p-6" /*onSubmit={rescheduleEvent}*/>
                 <div className="space-y-8 divide-y divide-gray-200">
                     <div>
                         <div>
