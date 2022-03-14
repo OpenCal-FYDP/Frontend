@@ -37,7 +37,7 @@ function Sidebar(props) {
     } else if (bookingsType == "teamCalendar") {
         return (
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <UserDetails team={props.team}></UserDetails>
+                <UserDetails user={props.user} team={props.team}></UserDetails>
             </div>
         )
     } else {

@@ -610,6 +610,7 @@ async function getUserAvailability(userEmail){
                     col-start-3 is for wednesday meetings, the number refers to the day of the week, 2 is tuesday, 4 is thursday, etc.
                 */}
                 {availabilities.map((avail, index) => {
+                  console.log(index);
                   if(index % 2 === 0){
                     //start time
                     let availDate = DateTime.fromSeconds(Number(avail));
@@ -632,6 +633,31 @@ async function getUserAvailability(userEmail){
                     );
                   } else {
                     //end time
+                    let availDate = DateTime.fromSeconds(Number(avail));
+                    let day = availDate.day;
+                    let midnight = availDate.set({day: day + 1, hour: 0, minute: 0});
+                    let duration = midnight.diff(availDate, ['hours']);
+                    let eventDay = availDate.weekday;
+                    let className = "relative mt-px flex col-start-" + eventDay; //this will put the event in the correct column corresponding to its day
+                    let hour = availDate.hour;
+                    let minutes = availDate.minute;
+                    let start = 2 + 6*2*hour;
+                    if(minutes > 0){
+                      start = start + 6;
+                    }
+                    let dur = 6*2*duration.hours;
+                    let gridRow = {gridRow: start + ' / span ' + dur};
+                    return (
+                      <li className={className} style={gridRow}>
+                        <a
+                          className="group absolute inset-1 flex flex-col overflow-y-auto rounded-lg bg-gray-50 p-2 text-xs leading-5 hover:bg-gray-100"
+                        >
+                          <p className="text-gray-500 group-hover:text-gray-700">
+                            <time dateTime="2022-01-12T06:00">{availDate.toLocaleString(DateTime.TIME_SIMPLE)}</time>
+                          </p>
+                        </a>
+                      </li>
+                    );
                   }
                 })}
                 {events.map((event, index) => {

@@ -17,7 +17,7 @@ export default function UserDetails(props) {
             <div className="px-4 py-5 sm:p-6">
                 <div className="flex">
                     <div className="mr-4 flex-shrink-0">
-                        {props.user.image? 
+                        {props.user? 
                         <img
                             className="h-16 w-16 border border-gray-300 bg-white text-gray-300"
                             preserveAspectRatio="none"
