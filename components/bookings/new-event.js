@@ -9,7 +9,7 @@ import { now } from "next-auth/client/_utils";
 import urls from "../../clients/client-urls.json";
 
 export default function NewEvent(props) {
-
+    console.log(props);
     const registerEvent = async event => {
         event.preventDefault()
 
