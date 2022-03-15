@@ -6,12 +6,11 @@ import UserDetails from '../../components/bookings/user-details'
 import NewEvent from '../../components/bookings/new-event'
 import { useRouter } from 'next/router'
 import TeamDetails from '../../components/bookings/team-details'
-import {GetTeam, GetUser} from "../../clients/identity/service.pb.js"
-import {GetUserProfile, SetUserProfile, SetAvailability, GetAvailability} from "../../clients/preference-management/service.pb.js";
-import {GetUsersGcalEvents, GetTeamssGcalEvents} from "../../clients/cal-management/service.pb.js";
+import { GetTeam, GetUser } from "../../clients/identity/service.pb.js"
+import { GetAvailability } from "../../clients/preference-management/service.pb.js";
+import { GetUsersGcalEvents, GetTeamssGcalEvents } from "../../clients/cal-management/service.pb.js";
 import Layout from '../../components/layout'
 import { client } from "twirpscript";
-import { DateTime } from 'luxon'
 import urls from "../../clients/client-urls.json"
 
 function Sidebar(props) {
@@ -31,20 +30,24 @@ function Sidebar(props) {
         if (bookings == session.user.email) {
             return (
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <UserDetails user={session.user}></UserDetails>
+                    <UserDetails userEmail={session.user ? session.user.email : "Invalid user. Can't get session.user"}></UserDetails>
                 </div>
             )
         } else {
             return (
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <UserDetails user={props.user}></UserDetails>
+                    <UserDetails userEmail={props.user ? props.user.email : "No such user"}></UserDetails>
                 </div>
             )
         }
     } else if (bookingsType === "teamCalendar") {
         return (
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <UserDetails team={props.team} user={props.user}></UserDetails>
+                <TeamDetails
+                    teamName={props.team ? props.team.teamName : "Invalid team name " + bookings}
+                    teamID={props.team ? props.team.teamID : ""}
+                    teamMembers={props.team ? props.team.teamMembers.join(", ") : ""}
+                ></TeamDetails>
             </div>
         )
     } else {
@@ -56,13 +59,12 @@ function Sidebar(props) {
     }
 }
 
-
-function sortDates(dates){
+function sortDates(dates) {
     let datesTmp = [];
     dates.forEach(date => {
         datesTmp.push(Number(date));
     })
-    datesTmp.sort(function(a,b) {
+    datesTmp.sort(function (a, b) {
         //https://stackoverflow.com/questions/1063007/how-to-sort-an-array-of-integers-correctly
         return a - b;
     });
@@ -73,31 +75,13 @@ function sortDates(dates){
     return datesTmpStr;
 }
 
-// TODO: Do GetTeam API call!
-
-        
-
-
-
-    // return (
-    //     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    //         <TeamDetails team={teamID}></TeamDetails>
-    //     </div>
-    // )
-
-// TODO: list of things to merge with Mark's calendar:
-// 1. Props.
-// 2. New functions.
-// 3. New Event button needs to direct correctly. This includes 4. routing.
-// 4. Routing for new event button
-
 export default function Page(props) {
 
     const { data: session, status } = useSession()
     const router = useRouter()
     const { bookingsType, bookings } = router.query
     const loading = status === 'loading'
-    
+
     const [user, setUser] = useState(props.user)
     const [email, setEmail] = useState(props.email)
     const [team, setTeam] = useState(props.team)
@@ -118,7 +102,7 @@ export default function Page(props) {
             query: { bookingsType: bookingsType, bookings: session.user.email },
         })
     }
-    
+
     /*if (bookingsType == "user") {
         getUserCalendarEvents(bookings);
         getUserAvailability(bookings);
@@ -169,7 +153,8 @@ export default function Page(props) {
     )
 }
 
-export async function getServerSideProps(context, props){
+export async function getServerSideProps(context, props) {
+
     //call apis to get data for preferences
     //console.log("HERE");
     const bookingsType = context.params.bookingsType;
@@ -178,38 +163,39 @@ export async function getServerSideProps(context, props){
     if (bookings == "self") {
         bookings = session.user.email;
     }
-    async function getUserAvailability(userEmail){
+
+    async function getUserAvailability(userEmail) {
         client.baseURL = urls.preference_management;
         userEmail = userEmail.replace("%40", "@") // sanitize the converted @ sign
         const avail = await GetAvailability({
             email: userEmail
         });
         const sortedAvail = sortDates(avail.timeAvailability);
-        if(sortedAvail.length % 2 === 1){
-          sortedAvail.pop(); //we want 2 availabilities per day, a start time and an end time
+        if (sortedAvail.length % 2 === 1) {
+            sortedAvail.pop(); //we want 2 availabilities per day, a start time and an end time
         }
         return sortedAvail;
         //console.log(sortedAvail)
     }
-    
-    async function getUserGcalEvents(userEmail){
+
+    async function getUserGcalEvents(userEmail) {
         client.baseURL = urls.calendar_management;
         let res = await GetUsersGcalEvents({
-          username: userEmail,
-          email: userEmail
+            username: userEmail,
+            email: userEmail
         });
         let events = [];
         res.eventIntervals.map((eventInterval) => {
             events.push(eventInterval.split("-"));
         });
-        for(let i = 0; i < events.length; i++){
+        for (let i = 0; i < events.length; i++) {
             events[i][0] = Number(events[i][0]); //convert to numbers so that DateTime.FromSeconds can be called on them
             events[i][1] = Number(events[i][1]);
         }
         return events;
     }
-      
-    async function getTeamGcalEvents(teamID){
+
+    async function getTeamGcalEvents(teamID) {
         client.baseURL = urls.calendar_management;
         let res = await GetTeamssGcalEvents({
             teamID: teamID
@@ -218,30 +204,36 @@ export async function getServerSideProps(context, props){
         res.eventIntervals.map((eventInterval) => {
             events.push(eventInterval.split("-"));
         });
-        for(let i = 0; i < events.length; i++){
+        for (let i = 0; i < events.length; i++) {
             events[i][0] = Number(events[i][0]); //convert to numbers so that DateTime.FromSeconds can be called on them
             events[i][1] = Number(events[i][1]);
         }
         return events;
     }
 
-    async function getTeamCalendarEvents(teamID) {
-        teamID = teamID.replace("%40", "@") //not sure if we need this here tbh
-        // API call here
-        // client.baseURL = "http://localhost:8080";
+    async function getTeamDetails(teamID) {
         client.baseURL = urls.identity;
-        let res = await GetTeam({
+        return await GetTeam({
             teamID: teamID,
         });
-        return res;
     }
-    //console.log("Before api calls");
-    //console.log(bookings);
-    
-    //
-    //console.log("HERE");
+
+    async function getUserDetails(userEmail) {
+        userEmail = userEmail.replace("%40", "@")
+        client.baseURL = urls.identity;
+        let response = await GetUser({
+            email: userEmail,
+            username: userEmail
+        });
+        if (response.oathToken) {
+            delete response.oathToken
+        }
+        return response;
+    }
+
     let userCalEvents = await getUserGcalEvents(session.user.email);
     if (bookingsType == "user"){
+        let user = await getUserDetails(bookings);
         let userEvents = await getUserGcalEvents(bookings);
         let userAvailability_0 = await getUserAvailability(bookings);
         let userAvailability_1 =  await getUserAvailability(session.user.email);
@@ -249,14 +241,13 @@ export async function getServerSideProps(context, props){
         return { props: {
             session: session,
             calendarEvents: userEvents,
-            user: bookings.replace("%40", "@"),
-            email: bookings.replace("%40", "@"),
+            user: user,
             availabilities: userAvailability,
             userCalEvents: userCalEvents
             }}
         } else{
         let teamEvents = await getTeamGcalEvents(bookings);
-        let team = await getTeamCalendarEvents(bookings);
+        let team = await getTeamDetails(bookings);
         let userAvailability = [];
         for(let i = 0; i < team.teamMembers.length; i++){
             let memberAvail = await getUserAvailability(team.teamMembers[i]);
@@ -270,5 +261,4 @@ export async function getServerSideProps(context, props){
             userCalEvents: userCalEvents
         }}
     }
-    
-  }
+}

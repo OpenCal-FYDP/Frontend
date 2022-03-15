@@ -1,4 +1,4 @@
-import {signIn, useSession} from 'next-auth/react'
+import { signIn, useSession } from 'next-auth/react'
 import { useEffect } from 'react'
 import Head from 'next/head'
 import Link from 'next/link'
@@ -25,7 +25,6 @@ export default function Home() {
             Welcome to OpenCal
           </h1>
         </main>
-
         <footer className="flex items-center justify-center w-full h-24 border-t">
           <a
             className="flex items-center justify-center"

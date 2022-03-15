@@ -1,7 +1,6 @@
 import { useSession } from "next-auth/react"
 import Link from 'next/link'
 
-/* This example requires Tailwind CSS v2.0+ */
 const navigation = [
   { name: 'Dashboard', href: '/dashboards' },
   { name: 'Preferences', href: '/preferences' },
@@ -13,18 +12,20 @@ function SignInSignOut() {
     return (
       <Link
         href="/api/auth/signout"
-        className="inline-block bg-white py-2 px-4 border border-transparent rounded-md text-base font-medium text-indigo-600 hover:bg-indigo-50"
       >
-        Sign out
+        <span className="inline-block bg-white py-2 px-4 border border-transparent rounded-md text-base font-medium text-indigo-600 hover:bg-indigo-50">
+          Sign out
+        </span>
       </Link>
     )
   } else {
     return (
       <Link
         href="/signin"
-        className="inline-block bg-white py-2 px-4 border border-transparent rounded-md text-base font-medium text-indigo-600 hover:bg-indigo-50"
       >
-        Sign in
+        <span className="inline-block bg-white py-2 px-4 border border-transparent rounded-md text-base font-medium text-indigo-600 hover:bg-indigo-50">
+          Sign in
+        </span>
       </Link>
     )
   }
@@ -46,8 +47,10 @@ export default function Header() {
             </Link>
             <div className="hidden ml-10 space-x-8 lg:block">
               {navigation.map((link) => (
-                <Link key={link.name} href={link.href} className="text-base font-medium text-white hover:text-indigo-50">
-                  {link.name}
+                <Link key={link.name} href={link.href} >
+                  <span className="text-base font-medium text-white hover:text-indigo-50">
+                    {link.name}
+                  </span>
                 </Link>
               ))}
             </div>
@@ -58,8 +61,10 @@ export default function Header() {
         </div>
         <div className="py-4 flex flex-wrap justify-center space-x-6 lg:hidden">
           {navigation.map((link) => (
-            <Link key={link.name} href={link.href} className="text-base font-medium text-white hover:text-indigo-50">
-              {link.name}
+            <Link key={link.name} href={link.href} >
+              <span className="text-base font-medium text-white hover:text-indigo-50">
+                {link.name}
+              </span>
             </Link>
           ))}
         </div>
