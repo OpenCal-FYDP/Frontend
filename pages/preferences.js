@@ -126,9 +126,10 @@ export default function Preferences(props) {
                 }
             }
             if(sameDay.length > 1){
+                console.log("sameDay.length > 1");
                 let min = Math.min(...sameDay);
                 let index = availabilityUpdated.indexOf(min.toString());
-                availabilityUpdated[index] = min.toString();
+                availabilityUpdated[index] = avail.toSeconds().toString();
 
             } else{
                 availabilityUpdated.push(avail.toSeconds().toString());
@@ -144,7 +145,7 @@ export default function Preferences(props) {
             if(sameDay.length > 1){
                 let max = Math.max(...sameDay);
                 let index = availabilityUpdated.indexOf(max.toString());
-                availabilityUpdated[index] = max.toString();
+                availabilityUpdated[index] = avail.toSeconds().toString();
             } else{
                 availabilityUpdated.push(avail.toSeconds().toString());
             }

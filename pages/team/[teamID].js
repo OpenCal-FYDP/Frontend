@@ -83,6 +83,7 @@ export default function Team(){
                 teamMembers: teamMembers
             }).then(() => {
                 membersToRemove.map(async (member) => await editUserTeamStatus(member, ""));
+                teamMembers.map(async (member) => await editUserTeamStatus(member, id));
             })
         }
         
