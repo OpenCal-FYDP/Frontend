@@ -16,7 +16,7 @@ export default function UserDetails(props) {
                 <div className="px-4 py-5 sm:p-6">
                     <div className="flex">
                         <div>
-                            <h4 className="text-lg font-bold">{props.userEmail}'s Calendar</h4>
+                            <h4 className="text-lg font-bold">{props.userEmail}&apos;s Calendar</h4>
                         </div>
                     </div>
                 </div>

@@ -19,9 +19,14 @@ function Sidebar(props) {
     const { bookingsType, bookings, newEvent } = router.query
     // TODO: Check route here and figure out whether to put Team-details or user-details
     if (newEvent) {
-        return (<NewEvent email={bookings} ></NewEvent>)
+        if(bookingsType === "teamCalendar"){
+            return (<NewEvent email={session.user.email} attendees={props.team.teamMembers}></NewEvent>)
+        }
+        else {
+            return (<NewEvent email={bookings} attendees={[session.user.email, props.user]}></NewEvent>)
+        }
     }
-    if (bookingsType == "user") {
+    if (bookingsType === "user") {
         if (bookings == session.user.email) {
             return (
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -35,7 +40,7 @@ function Sidebar(props) {
                 </div>
             )
         }
-    } else if (bookingsType == "teamCalendar") {
+    } else if (bookingsType === "teamCalendar") {
         return (
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <TeamDetails
@@ -82,6 +87,7 @@ export default function Page(props) {
     const [team, setTeam] = useState(props.team)
     const [availabilities, setAvailabilities] = useState(props.availabilities)
     const [calendarEvents, setCalendarEvents] = useState(props.calendarEvents)
+    const [userCalEvents, setUserCalEvents] = useState(props.userCalEvents)
     // When rendering client side don't display anything until loading is complete
     if (typeof window !== 'undefined' && loading) return null
 
@@ -130,7 +136,7 @@ export default function Page(props) {
 
                             {/* Your content */}
                             {/* Insert calendar here! */}
-                            <CalendarWeekView user={session.user} calendarEvents={calendarEvents} availabilities={availabilities}></CalendarWeekView>
+                            <CalendarWeekView user={session.user} calendarEvents={calendarEvents} availabilities={availabilities} userCalEvents={userCalEvents}></CalendarWeekView>
                         </section>
 
                         {/* Secondary column (hidden on smaller screens) */}
@@ -225,31 +231,34 @@ export async function getServerSideProps(context, props) {
         return response;
     }
 
-    console.log("Loading in the props now.")
-    if (bookingsType == "user") {
+    let userCalEvents = await getUserGcalEvents(session.user.email);
+    if (bookingsType == "user"){
         let user = await getUserDetails(bookings);
         let userEvents = await getUserGcalEvents(bookings);
-        let userAvailability = await getUserAvailability(bookings);
-        return {
-            props: {
-                session: session,
-                calendarEvents: userEvents,
-                user: user,
-                availabilities: userAvailability
-            }
-        }
-    } else {
+        let userAvailability_0 = await getUserAvailability(bookings);
+        let userAvailability_1 =  await getUserAvailability(session.user.email);
+        let userAvailability = [userAvailability_0, userAvailability_1];
+        return { props: {
+            session: session,
+            calendarEvents: userEvents,
+            user: user,
+            availabilities: userAvailability,
+            userCalEvents: userCalEvents
+            }}
+        } else{
         let teamEvents = await getTeamGcalEvents(bookings);
         let team = await getTeamDetails(bookings);
-        console.log("Team: ")
-        console.log(team)
-        return {
-            props: {
-                session: session,
-                calendarEvents: teamEvents,
-                team: team,
-                availabilities: []
-            }
+        let userAvailability = [];
+        for(let i = 0; i < team.teamMembers.length; i++){
+            let memberAvail = await getUserAvailability(team.teamMembers[i]);
+            userAvailability.push(memberAvail);
         }
+        return { props: {
+            session: session,
+            calendarEvents: teamEvents,
+            team: team,
+            availabilities: userAvailability,
+            userCalEvents: userCalEvents
+        }}
     }
 }

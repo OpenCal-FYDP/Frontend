@@ -39,7 +39,7 @@ export default function Dashboards(props) {
             email: email,
             username: email
         });
-        console.log(user)
+        //console.log(user)
         const team = await GetTeam({teamID: user.teamID}, () => {console.log("got team")}, () => {console.log("couldn't get team")});
         if(team){
             setTeams([{teamName: team.teamName, teamID: user.teamID}]);
@@ -99,7 +99,7 @@ export default function Dashboards(props) {
                                                                                 type="button"
                                                                                 className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                                                                             >
-                                                                                {member}s dashboard
+                                                                                {member}&apos;s dashboard
                                                                             </button>
                                                                         </Link>
                                                                     </div>
