@@ -11,19 +11,21 @@ export default function Example() {
     async function updateUserOnSignIn(){
         if(session){
             try {
-                await GetUser({
+                let user = await GetUser({
                     email: session.user.email,
                     username: session.user.email
+                })
+                const oauthString = JSON.stringify({
+                    "access_token": session.accessToken,
+                    "token_type": "Bearer",
+                    "refresh_token": session.refreshToken,
+                    "expiry": session.accessTokenExpires,
                 })
                 await UpdateUser({
                     username: session.user.email,
                     email: session.user.email,
-                    oathToken: {
-                        "access_token": session.accessToken,
-                        "token_type": "Bearer",
-                        "refresh_token": session.refreshToken,
-                        "expiry": session.accessTokenExpires,
-                    }
+                    oathToken: new TextEncoder().encode(oauthString),
+                    teamID: user.teamID
                 })
             } catch (err) {
                 console.log("User not found: ", err)

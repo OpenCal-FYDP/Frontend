@@ -21,7 +21,6 @@ function Sidebar(props) {
     // TODO: Check route here and figure out whether to put Team-details or user-details
     if (newEvent) {
         if(bookingsType === "teamCalendar"){
-            console.log(props.team);
             return (<NewEvent email={session.user.email} attendees={props.team.teamMembers}></NewEvent>)
         }
         else {
@@ -104,6 +103,7 @@ export default function Page(props) {
     const [team, setTeam] = useState(props.team)
     const [availabilities, setAvailabilities] = useState(props.availabilities)
     const [calendarEvents, setCalendarEvents] = useState(props.calendarEvents)
+    const [userCalEvents, setUserCalEvents] = useState(props.userCalEvents)
     // When rendering client side don't display anything until loading is complete
     if (typeof window !== 'undefined' && loading) return null
 
@@ -152,7 +152,7 @@ export default function Page(props) {
 
                             {/* Your content */}
                             {/* Insert calendar here! */}
-                            <CalendarWeekView user={session.user} calendarEvents={calendarEvents} availabilities={availabilities}></CalendarWeekView>
+                            <CalendarWeekView user={session.user} calendarEvents={calendarEvents} availabilities={availabilities} userCalEvents={userCalEvents}></CalendarWeekView>
                         </section>
 
                         {/* Secondary column (hidden on smaller screens) */}
@@ -240,24 +240,34 @@ export async function getServerSideProps(context, props){
     
     //
     //console.log("HERE");
+    let userCalEvents = await getUserGcalEvents(session.user.email);
     if (bookingsType == "user"){
         let userEvents = await getUserGcalEvents(bookings);
-        let userAvailability = await getUserAvailability(bookings); 
+        let userAvailability_0 = await getUserAvailability(bookings);
+        let userAvailability_1 =  await getUserAvailability(session.user.email);
+        let userAvailability = [userAvailability_0, userAvailability_1];
         return { props: {
             session: session,
             calendarEvents: userEvents,
             user: bookings.replace("%40", "@"),
             email: bookings.replace("%40", "@"),
-            availabilities: userAvailability
+            availabilities: userAvailability,
+            userCalEvents: userCalEvents
             }}
         } else{
         let teamEvents = await getTeamGcalEvents(bookings);
         let team = await getTeamCalendarEvents(bookings);
+        let userAvailability = [];
+        for(let i = 0; i < team.teamMembers.length; i++){
+            let memberAvail = await getUserAvailability(team.teamMembers[i]);
+            userAvailability.push(memberAvail);
+        }
         return { props: {
             session: session,
             calendarEvents: teamEvents,
             team: team,
-            availabilities: []
+            availabilities: userAvailability,
+            userCalEvents: userCalEvents
         }}
     }
     
