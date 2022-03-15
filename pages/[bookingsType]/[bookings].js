@@ -228,8 +228,8 @@ export async function getServerSideProps(context, props) {
     console.log("Loading in the props now.")
     if (bookingsType == "user") {
         let user = await getUserDetails(bookings);
-        let userEvents = await getUserGcalEvents(user.email);
-        let userAvailability = await getUserAvailability(user.email);
+        let userEvents = await getUserGcalEvents(bookings);
+        let userAvailability = await getUserAvailability(bookings);
         return {
             props: {
                 session: session,
