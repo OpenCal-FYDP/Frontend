@@ -52,7 +52,7 @@ export default function EventPage(props) {
 
     return (<Layout>
         <>
-            <form className="bg-white py-6 px-4 space-y-6 sm:p-6" /*onSubmit={rescheduleEvent}*/>
+            <form className="bg-white py-6 px-4 space-y-6 sm:p-6" onSubmit={rescheduleEvent}>
                 <div className="space-y-8 divide-y divide-gray-200">
                     <div>
                         <div>

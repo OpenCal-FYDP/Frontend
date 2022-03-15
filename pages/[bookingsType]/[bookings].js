@@ -7,7 +7,7 @@ import NewEvent from '../../components/bookings/new-event'
 import { useRouter } from 'next/router'
 import TeamDetails from '../../components/bookings/team-details'
 import { GetTeam, GetUser } from "../../clients/identity/service.pb.js"
-import { GetUserProfile, SetUserProfile, SetAvailability, GetAvailability } from "../../clients/preference-management/service.pb.js";
+import { GetAvailability } from "../../clients/preference-management/service.pb.js";
 import { GetUsersGcalEvents, GetTeamssGcalEvents } from "../../clients/cal-management/service.pb.js";
 import Layout from '../../components/layout'
 import { client } from "twirpscript";
@@ -25,13 +25,13 @@ function Sidebar(props) {
         if (bookings == session.user.email) {
             return (
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <UserDetails userEmail={session.user ? session.user.email : ""}></UserDetails>
+                    <UserDetails userEmail={session.user ? session.user.email : "Invalid user. Can't get session.user"}></UserDetails>
                 </div>
             )
         } else {
             return (
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <UserDetails userEmail={props.userEmail}></UserDetails>
+                    <UserDetails userEmail={props.user ? props.user.email : "No such user"}></UserDetails>
                 </div>
             )
         }
@@ -53,88 +53,6 @@ function Sidebar(props) {
         )
     }
 }
-
-// function GetUserDetails(userEmail) {
-//     if (!userEmail || userEmail == "self") {
-//         return (
-//             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-//                 <UserDetails email={"Loading..."} username={""}></UserDetails>
-//             </div>
-//         )
-//     }
-//     userEmail = userEmail.replace("%40", "@") // sanitize the converted @ sign
-//     client.baseURL = urls.identity;
-
-//     const [user, setUser] = useState(null)
-//     const [isLoading, setLoading] = useState(false)
-//     useEffect(async () => {
-//         setLoading(true)
-//         await GetUser({
-//             email: userEmail,
-//             username: userEmail,
-//         }).then((res) => {
-//             // use the result here
-//             setLoading(false)
-//             setUser(res)
-//             console.log("RESULT: " + res)
-//         })
-//     }, [userEmail])
-
-//     if (!user) return <p>No data for user "{userEmail}"</p>
-
-
-//     return (
-//         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-//             <UserDetails email={user ? user.email : "No such user " + userEmail} username={user ? user.username : ""}></UserDetails>
-//         </div>
-//     )
-// }
-
-// // TODO: Do GetTeam API call!
-// function GetTeamDetails(teamID) {
-//     if (!teamID) {
-//         return (
-//             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-//                 <TeamDetails teamname={"Invalid teamID"}></TeamDetails>
-//             </div>
-//         )
-//     }
-//     client.baseURL = urls.identity;
-
-//     const [team, setTeam] = useState(null)
-//     const [isLoading, setLoading] = useState(false)
-//     useEffect(async () => {
-//         setLoading(true)
-//         await GetTeam({
-//             teamID: teamID,
-//         }).then((res) => {
-//             // use the result here
-//             setLoading(false)
-//             setTeam(res)
-//             console.log("RESULT: " + res)
-//         })
-//     }, [teamID])
-
-//     if (!team) return <p>No team data for "{teamID}"</p>
-
-
-//     return (
-//         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-//             <TeamDetails
-//                 teamName={team ? team.teamName : "No such team " + teamID}
-//                 teamID={team ? team.teamID : ""}
-//                 teamMembers={team ? "Team Members: (" + team.teamMembers.join(", ") + ")" : ""}
-//             ></TeamDetails>
-//         </div>
-//     )
-// }
-
-// TODO: list of things to merge with Mark's calendar:
-// 1. Props.
-// 2. New functions.
-// 3. New Event button needs to direct correctly. This includes 4. routing.
-// 4. Routing for new event button
-
 
 function sortDates(dates) {
     let datesTmp = [];
@@ -288,27 +206,35 @@ export async function getServerSideProps(context, props) {
     }
 
     async function getTeamDetails(teamID) {
-        teamID = teamID.replace("%40", "@") //not sure if we need this here tbh
-        // API call here
-        // client.baseURL = "http://localhost:8080";
         client.baseURL = urls.identity;
         return await GetTeam({
             teamID: teamID,
         });
     }
 
-
+    async function getUserDetails(userEmail) {
+        userEmail = userEmail.replace("%40", "@")
+        client.baseURL = urls.identity;
+        let response = await GetUser({
+            email: userEmail,
+            username: userEmail
+        });
+        if (response.oathToken) {
+            delete response.oathToken
+        }
+        return response;
+    }
 
     console.log("Loading in the props now.")
     if (bookingsType == "user") {
-        let userEvents = await getUserGcalEvents(bookings);
-        let userAvailability = await getUserAvailability(bookings);
+        let user = await getUserDetails(bookings);
+        let userEvents = await getUserGcalEvents(user.email);
+        let userAvailability = await getUserAvailability(user.email);
         return {
             props: {
                 session: session,
                 calendarEvents: userEvents,
-                userEmail: bookings.replace("%40", "@"),
-                email: bookings.replace("%40", "@"),
+                user: user,
                 availabilities: userAvailability
             }
         }
