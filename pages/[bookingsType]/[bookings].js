@@ -23,7 +23,7 @@ function Sidebar(props) {
             return (<NewEvent email={session.user.email} attendees={props.team.teamMembers}></NewEvent>)
         }
         else {
-            return (<NewEvent email={bookings} attendees={[session.user.email, props.user]}></NewEvent>)
+            return (<NewEvent email={bookings} attendees={[session.user.email, props.user.email]}></NewEvent>)
         }
     }
     if (bookingsType === "user") {
